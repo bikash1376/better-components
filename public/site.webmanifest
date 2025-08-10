@@ -1,0 +1,14 @@
+{
+  "short_name": "Better Components",
+  "name": "Better Components - Modern CSS Background Patterns",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

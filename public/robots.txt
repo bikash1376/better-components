@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Sitemap
+Host: https://bettercomponents.vercel.app
+Crawl-delay: 1
+
+Sitemap: https://bettercomponents.vercel.app/sitemap.xml
