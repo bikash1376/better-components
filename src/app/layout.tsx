@@ -16,7 +16,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bettercomponents.vercel.app"),
-  title: "better components - Modern Background Patterns & Gradients Snippets",
+  title: "better components - Better Components for a better frontend",
   description:
     "Create stunning websites with our curated collection of 100+ modern CSS background patterns and gradients for your websites and apps. Easily copy and paste into your next project. Crafted with modern CSS and Tailwind for seamless integration.",
   keywords: [

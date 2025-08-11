@@ -23,13 +23,13 @@ export default function Navbar({ theme }: NavbarProps) {
         <div className="flex gap-2">
 
         
-            <Image
-            src="/images/readme-banner.png"
+            {/* <Image
+            src="/images/image.png"
             alt="Better Components Logo"
             width={150}
             height={40}
             className="h-10 w-auto"
-          />
+          /> */}
             <span
               className={`font-serif font-normal tracking-wide transition-colors duration-300 text-lg ${
                 isPatternDark ? "text-white" : "text-gray-700"

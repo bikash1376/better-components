@@ -56,9 +56,9 @@ export default function Home() {
               theme={theme}
             />
             <PatternShowcase
-              activePattern={activePattern}
-              setActivePattern={setActivePattern}
-              theme={theme}
+              // activePattern={activePattern}
+              // setActivePattern={setActivePattern}
+              // theme={theme}
             />
             <Footer theme={theme} />
           </div>

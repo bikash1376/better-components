@@ -267,7 +267,10 @@ export default function Hero({ theme }: HeroProps) {
             >
               scroll
               <br />
-              📜
+              <span className="mt-2 inline-block animate-bounce">
+📜
+              </span>
+              
             </div>
           </div>
           {/* <div className="text-center">
