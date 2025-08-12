@@ -30,13 +30,13 @@ export function generateBlobSVG(
   }
 
   return `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
   <defs>
     <filter id="blur1" x="-10%" y="-10%" width="120%" height="120%">
       <feGaussianBlur stdDeviation="161" result="blur" />
     </filter>
   </defs>
-  <rect width="${width}" height="${height}" fill="${bgColor}" />
+  <rect width="100%" height="100%" fill="${bgColor}" />
   <g filter="url(#blur1)">
     ${blobs}
   </g>

@@ -23,6 +23,30 @@ export default function PatternShowcase() {
     height: typeof window !== 'undefined' ? window.innerHeight : 1080,
   });
 
+  // Create the React component
+  const BeautifulSvg = () => (
+    <div className="min-h-screen w-full relative">
+      {/* SVG Background */}
+      <div className="absolute inset-0 z-0" dangerouslySetInnerHTML={{ __html: svg }} />
+      
+      {/* Your content here */}
+    </div>
+  );
+
+  // Function to convert React component to string
+  const getComponentString = () => {
+    return `<div className="min-h-screen w-full relative">
+  {/* SVG Background */}
+  <div 
+    className="fixed inset-0 z-0 min-h-screen w-full pointer-events-none"
+    style={{ width: '100vw', height: '100vh' }}
+    dangerouslySetInnerHTML={{ __html: \`${svg}\` }} 
+  />
+  
+  {/* Your content here */}
+</div>`;
+  };
+
   const generateNewPattern = () => {
     // Pass the darkness value to the SVG generator
     setSvg(generateBlobSVG(viewport.width, viewport.height, darkness));
@@ -47,47 +71,48 @@ export default function PatternShowcase() {
     <>
       <div
         className="fixed inset-0 z-0 min-h-screen w-full"
+        style={{ width: '100vw', height: '100vh' }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
       <div className="sticky flex flex-col items-center justify-center min-h-screen">
-  <div className="flex flex-col items-center space-y-4">
-    {/* Color range selector */}
-    <div className="flex items-center space-x-2">
-      <span className="text-white text-sm font-medium">Darkness:</span>
-      {/* Correct Shadcn Slider component */}
-      <Slider
-        defaultValue={[50]} // Use a default value as a number array
-        min={0}
-        max={100}
-        step={1}
-        value={[darkness]} // Pass your state as a number array
-        onValueChange={(value) => setDarkness(value[0])} // Get the value from the array
-        className="w-48 h-2 rounded-lg cursor-pointer"
-      />
-    </div>
-    {/* Buttons container */}
-    <div className="flex space-x-2">
-      <button
-        onClick={generateNewPattern}
-        className="px-4 py-2 text-white bg-black rounded-md shadow-lg hover:bg-slate-700 transition-colors"
-      >
-        Generate
-      </button>
-      <button
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(svg);
-            alert('SVG copied to clipboard!');
-          } catch (err) {
-            console.error('Failed to copy SVG: ', err);
-          }
-        }}
-        className="px-4 py-2 text-white bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 transition-colors"
-      >
-        Copy SVG
-      </button>
-    </div>
-  </div>
+        <div className="flex flex-col items-center space-y-4">
+          {/* Color range selector */}
+          <div className="flex items-center space-x-2">
+            <span className="text-white text-sm font-medium">Darkness:</span>
+            {/* Correct Shadcn Slider component */}
+            <Slider
+              defaultValue={[50]} // Use a default value as a number array
+              min={0}
+              max={100}
+              step={1}
+              value={[darkness]} // Pass your state as a number array
+              onValueChange={(value) => setDarkness(value[0])} // Get the value from the array
+              className="w-48 h-2 rounded-lg cursor-pointer"
+            />
+          </div>
+          {/* Buttons container */}
+          <div className="flex space-x-2">
+            <button
+              onClick={generateNewPattern}
+              className="px-4 py-2 text-white bg-black rounded-md shadow-lg hover:bg-slate-700 transition-colors"
+            >
+              Generate
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(getComponentString());
+                  alert('React component copied to clipboard!');
+                } catch (err) {
+                  console.error('Failed to copy component: ', err);
+                }
+              }}
+              className="px-4 py-2 text-white bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 transition-colors"
+            >
+              Copy Component
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );

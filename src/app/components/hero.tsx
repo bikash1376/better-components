@@ -97,8 +97,8 @@ export default function Hero({ theme }: HeroProps) {
               className={`font-medium transition-colors duration-300 font-serif ${isPatternDark ? "text-white" : "text-gray-900 dark:text-gray-50"
                 }`}
               style={{ fontFamily: 'var(--font-instrument-serif)' }}
-            >
-              Better <i className="px-[8px] bg-gradient-to-l from-indigo-500 via-red-500 to-blue-500 text-transparent bg-clip-text">Components</i>
+            >Better 
+               <i className="px-[8px]">Components</i>
               
             </span>
           </h1>

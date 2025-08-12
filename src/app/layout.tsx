@@ -461,14 +461,14 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
-        className={`${GeistSans.className} ${instrumentSerif.variable} bg-background text-foreground antialiased min-h-screen flex items-center justify-center`}
+        className={`${GeistSans.className} ${instrumentSerif.variable} bg-background text-foreground antialiased min-h-screen`}
       >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem={false}
         >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full">
             {children}
             <Analytics />
             <SpeedInsights />
