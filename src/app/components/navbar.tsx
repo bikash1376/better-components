@@ -1,7 +1,6 @@
 "use client"
 
 import { Github, Twitter } from "lucide-react"
-import Image from "next/image"
 
 interface NavbarProps {
   theme: "light" | "dark"

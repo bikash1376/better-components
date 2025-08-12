@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Github, Copy, Eye, Code2, Zap } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, Github, Code2, } from "lucide-react";
 import { Instrument_Serif } from "next/font/google";
 import { useState, useEffect } from "react";
 
@@ -50,7 +49,7 @@ export default function Hero({ theme }: HeroProps) {
       clearInterval(blurInterval);
       clearInterval(companyInterval);
     };
-  }, []);
+  }, [blurLevels.length, companies.length]);
 
   return (
     <section className="container py-8 sm:py-12 md:py-16 lg:py-18 text-center relative overflow-hidden px-4 sm:px-6 lg:px-8 flex items-center justify-center">

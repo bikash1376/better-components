@@ -2,8 +2,8 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Host
 Host: https://bettercomponents.vercel.app
-Crawl-delay: 1
 
+# Sitemaps
 Sitemap: https://bettercomponents.vercel.app/sitemap.xml

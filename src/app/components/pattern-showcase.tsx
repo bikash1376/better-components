@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 // import { Badge } from "@/components/ui/badge";
 // import { toast } from "sonner";
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { generateBlobSVG } from '../ext/blobBg';
 import { Slider } from "@/components/ui/slider"
 
@@ -23,15 +23,6 @@ export default function PatternShowcase() {
     height: typeof window !== 'undefined' ? window.innerHeight : 1080,
   });
 
-  // Create the React component
-  const BeautifulSvg = () => (
-    <div className="min-h-screen w-full relative">
-      {/* SVG Background */}
-      <div className="absolute inset-0 z-0" dangerouslySetInnerHTML={{ __html: svg }} />
-      
-      {/* Your content here */}
-    </div>
-  );
 
   // Function to convert React component to string
   const getComponentString = () => {
@@ -47,10 +38,10 @@ export default function PatternShowcase() {
 </div>`;
   };
 
-  const generateNewPattern = () => {
+  const generateNewPattern = useCallback(() => {
     // Pass the darkness value to the SVG generator
     setSvg(generateBlobSVG(viewport.width, viewport.height, darkness));
-  };
+  }, [viewport.width, viewport.height, darkness]);
 
   useEffect(() => {
     generateNewPattern();
@@ -65,7 +56,7 @@ export default function PatternShowcase() {
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [viewport, darkness]); // Re-run effect when viewport or darkness changes
+  }, [generateNewPattern]); // Now only depends on the memoized function
 
   return (
     <>

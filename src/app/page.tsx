@@ -9,7 +9,7 @@ import { gridPatterns } from "./utils/patterns";
 import { Toaster } from "sonner";
 // import SupportDropdown from "./components/SupportDropdownProps ";
 import ReturnToPreview from "./components/ReturnToPreview";
-import Test from "@/Test";
+
 
 export default function Home() {
   const [activePattern, setActivePattern] = useState<string | null>(null);
