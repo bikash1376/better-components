@@ -19,8 +19,8 @@ export function LandingHero() {
     target: ref,
     offset: ["start start", "end end"],
   })
-  // Grows from full-cover to ~98% larger-feeling as you scroll.
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.22])
+  // Starts zoomed-in and zooms out toward full-cover as you scroll.
+  const scale = useTransform(scrollYProgress, [0, 1], [1.22, 1])
 
   return (
     <section ref={ref} className="relative h-[170svh]">
