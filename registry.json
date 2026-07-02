@@ -1,8 +1,113 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "name": "better-component",
-  "homepage": "https://better-component.dev",
+  "name": "bettercomp",
+  "homepage": "https://bettercomp.dev",
   "items": [
+    {
+      "name": "static-button",
+      "type": "registry:component",
+      "title": "Static Button",
+      "description": "A clean, Apple-style pill button with variants and sizes — pure CSS, no motion.",
+      "dependencies": ["class-variance-authority"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/static-button.tsx",
+          "type": "registry:component",
+          "target": "components/better/static-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "magnetic-card",
+      "type": "registry:component",
+      "title": "Magnetic Card",
+      "description": "A card that tilts in 3D toward the cursor, with a moving glare.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/magnetic-card.tsx",
+          "type": "registry:component",
+          "target": "components/better/magnetic-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dynamic-island",
+      "type": "registry:component",
+      "title": "Dynamic Island",
+      "description": "An iPhone-style pill that fluidly resizes and morphs between states.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/dynamic-island.tsx",
+          "type": "registry:component",
+          "target": "components/better/dynamic-island.tsx"
+        }
+      ]
+    },
+    {
+      "name": "infinite-canvas",
+      "type": "registry:component",
+      "title": "Infinite Canvas",
+      "description": "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/infinite-canvas.tsx",
+          "type": "registry:component",
+          "target": "components/better/infinite-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "magnetic-button",
+      "type": "registry:component",
+      "title": "Magnetic Button",
+      "description": "A button that pulls toward the cursor on hover.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/magnetic-button.tsx",
+          "type": "registry:component",
+          "target": "components/better/magnetic-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-tooltip",
+      "type": "registry:component",
+      "title": "Icon Tooltip",
+      "description": "An icon button that reveals a tooltip on hover.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/icon-tooltip.tsx",
+          "type": "registry:component",
+          "target": "components/better/icon-tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "notification-card",
+      "type": "registry:component",
+      "title": "Notification Card",
+      "description": "A toast-style notification with a leading icon.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/notification-card.tsx",
+          "type": "registry:component",
+          "target": "components/better/notification-card.tsx"
+        }
+      ]
+    },
     {
       "name": "text-shimmer",
       "type": "registry:component",
@@ -19,21 +124,6 @@
       ]
     },
     {
-      "name": "typewriter-text",
-      "type": "registry:component",
-      "title": "Typewriter Text",
-      "description": "Words typed out character by character with a blinking caret.",
-      "dependencies": [],
-      "registryDependencies": [],
-      "files": [
-        {
-          "path": "src/components/better/typewriter-text.tsx",
-          "type": "registry:component",
-          "target": "components/better/typewriter-text.tsx"
-        }
-      ]
-    },
-    {
       "name": "number-ticker",
       "type": "registry:component",
       "title": "Number Ticker",
@@ -45,6 +135,21 @@
           "path": "src/components/better/number-ticker.tsx",
           "type": "registry:component",
           "target": "components/better/number-ticker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stop-motion",
+      "type": "registry:component",
+      "title": "Stop Motion",
+      "description": "Choppy, hand-animated stop-motion 'boil' for any content.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/stop-motion.tsx",
+          "type": "registry:component",
+          "target": "components/better/stop-motion.tsx"
         }
       ]
     },
@@ -79,47 +184,17 @@
       ]
     },
     {
-      "name": "mesh-gradient",
+      "name": "dots-loader",
       "type": "registry:component",
-      "title": "Mesh Gradient",
-      "description": "A flowing multi-color gradient rendered on the GPU (paper.design).",
-      "dependencies": ["@paper-design/shaders-react"],
+      "title": "Dots Loader",
+      "description": "Three dots bouncing in sequence.",
+      "dependencies": ["motion"],
       "registryDependencies": [],
       "files": [
         {
-          "path": "src/components/better/mesh-gradient.tsx",
+          "path": "src/components/better/dots-loader.tsx",
           "type": "registry:component",
-          "target": "components/better/mesh-gradient.tsx"
-        }
-      ]
-    },
-    {
-      "name": "neuro-noise",
-      "type": "registry:component",
-      "title": "Neuro Noise",
-      "description": "A glowing web of fluid lines on the GPU (paper.design).",
-      "dependencies": ["@paper-design/shaders-react"],
-      "registryDependencies": [],
-      "files": [
-        {
-          "path": "src/components/better/neuro-noise.tsx",
-          "type": "registry:component",
-          "target": "components/better/neuro-noise.tsx"
-        }
-      ]
-    },
-    {
-      "name": "metaballs",
-      "type": "registry:component",
-      "title": "Metaballs",
-      "description": "Gooey blobs merging into organic shapes on the GPU (paper.design).",
-      "dependencies": ["@paper-design/shaders-react"],
-      "registryDependencies": [],
-      "files": [
-        {
-          "path": "src/components/better/metaballs.tsx",
-          "type": "registry:component",
-          "target": "components/better/metaballs.tsx"
+          "target": "components/better/dots-loader.tsx"
         }
       ]
     },

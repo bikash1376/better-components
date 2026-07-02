@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "stop-motion",
+  "title": "Stop Motion",
+  "description": "Choppy, hand-animated stop-motion 'boil' for any content.",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/stop-motion.tsx",
+      "content": "\"use client\"\n\nimport { useEffect, useState, type ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface StopMotionProps {\n  children: ReactNode\n  className?: string\n  /** Frames per second — lower is choppier / more hand-made. */\n  fps?: number\n}\n\n/** Discrete jitter frames that snap (no interpolation) for a stop-motion \"boil\". */\nconst FRAMES = [\n  { rotate: -1.5, x: -1, y: 0.5 },\n  { rotate: 1.2, x: 1, y: -0.8 },\n  { rotate: -0.5, x: -0.6, y: 1 },\n  { rotate: 1.6, x: 0.8, y: -0.4 },\n]\n\n/**\n * StopMotion — wraps content and jumps between discrete frames, giving the\n * choppy, hand-animated \"boil\" of stop-motion. Snaps between frames (no easing).\n * Category: Typography. Part of the Better Component library.\n */\nexport function StopMotion({ children, className, fps = 8 }: StopMotionProps) {\n  const [frame, setFrame] = useState(0)\n\n  useEffect(() => {\n    const id = setInterval(\n      () => setFrame((f) => (f + 1) % FRAMES.length),\n      1000 / fps\n    )\n    return () => clearInterval(id)\n  }, [fps])\n\n  const f = FRAMES[frame]\n\n  return (\n    <div\n      className={cn(\"inline-block will-change-transform\", className)}\n      style={{\n        transform: `translate(${f.x}px, ${f.y}px) rotate(${f.rotate}deg)`,\n      }}\n    >\n      {children}\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/stop-motion.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

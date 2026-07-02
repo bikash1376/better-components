@@ -14,6 +14,7 @@ import {
 import { ChevronRight, Palette } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { CodeBlock } from "@/components/site/code-block"
 import { iconLibraries, useIcons } from "@/components/site/icons"
 
 interface SearchItem {
@@ -349,9 +350,9 @@ function CodeModal({
             <code className="font-mono">components/better/</code>.
           </p>
         )}
-        <pre className="overflow-auto p-4 text-sm leading-relaxed">
-          <code className="font-mono">{shown}</code>
-        </pre>
+        <div className="min-h-0 flex-1 overflow-auto">
+          <CodeBlock code={shown} lang="tsx" copy={false} />
+        </div>
       </motion.div>
     </div>
   )

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "sketch-border",
+  "title": "Sketch Border",
+  "description": "A hand-drawn border that boils — redrawn a few times a second.",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/sketch-border.tsx",
+      "content": "\"use client\"\n\nimport { useEffect, useId, useState, type ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface SketchBorderProps {\n  children: ReactNode\n  className?: string\n  /** Border color (any CSS color). */\n  color?: string\n  /** Stroke thickness in px. */\n  strokeWidth?: number\n  /** How wobbly the line is. */\n  roughness?: number\n  /** Redraws (re-seeds) per second — the classic \"line boil\". */\n  fps?: number\n  /** Corner radius of the underlying rect. */\n  radius?: number\n}\n\n/**\n * SketchBorder — wraps content in a hand-drawn border that \"boils\": the\n * wobble is re-seeded a few times a second, like ink redrawn every frame.\n * Category: Stop Motion. Part of the Better Component library.\n */\nexport function SketchBorder({\n  children,\n  className,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  roughness = 4,\n  fps = 4,\n  radius = 10,\n}: SketchBorderProps) {\n  const id = useId()\n  const [seed, setSeed] = useState(1)\n\n  useEffect(() => {\n    const t = setInterval(() => setSeed((s) => (s % 90) + 7), 1000 / fps)\n    return () => clearInterval(t)\n  }, [fps])\n\n  const pad = strokeWidth + roughness\n  return (\n    <div className={cn(\"relative inline-block\", className)} style={{ padding: pad + 6 }}>\n      <svg\n        aria-hidden\n        className=\"pointer-events-none absolute inset-0 size-full overflow-visible\"\n      >\n        <defs>\n          <filter id={`sketch-${id}`} x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"140%\">\n            <feTurbulence\n              type=\"fractalNoise\"\n              baseFrequency=\"0.045\"\n              numOctaves=\"2\"\n              seed={seed}\n              result=\"n\"\n            />\n            <feDisplacementMap\n              in=\"SourceGraphic\"\n              in2=\"n\"\n              scale={roughness * 2}\n              xChannelSelector=\"R\"\n              yChannelSelector=\"G\"\n            />\n          </filter>\n        </defs>\n        <rect\n          x={pad / 2}\n          y={pad / 2}\n          width={`calc(100% - ${pad}px)`}\n          height={`calc(100% - ${pad}px)`}\n          rx={radius}\n          fill=\"none\"\n          stroke={color}\n          strokeWidth={strokeWidth}\n          strokeLinecap=\"round\"\n          filter={`url(#sketch-${id})`}\n        />\n      </svg>\n      {children}\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/sketch-border.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

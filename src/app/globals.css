@@ -24,6 +24,17 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+
+  /* Syntax highlighting (One Light) */
+  --code-plain: #383a42;
+  --code-comment: #a0a1a7;
+  --code-punctuation: #383a42;
+  --code-keyword: #a626a4;
+  --code-tag: #e45649;
+  --code-attr: #986801;
+  --code-string: #50a14f;
+  --code-function: #4078f2;
+  --code-number: #986801;
 }
 
 .dark {
@@ -46,6 +57,17 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+
+  /* Syntax highlighting (One Dark) */
+  --code-plain: #abb2bf;
+  --code-comment: #7f848e;
+  --code-punctuation: #abb2bf;
+  --code-keyword: #c678dd;
+  --code-tag: #e06c75;
+  --code-attr: #d19a66;
+  --code-string: #98c379;
+  --code-function: #61afef;
+  --code-number: #d19a66;
 }
 
 @theme inline {

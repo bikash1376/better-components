@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "number-ticker",
+  "title": "Number Ticker",
+  "description": "A number that springs up to its value when scrolled into view.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/number-ticker.tsx",
+      "content": "\"use client\"\n\nimport { useEffect, useRef } from \"react\"\nimport { useInView, useMotionValue, useSpring } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface NumberTickerProps {\n  /** Target value to count to. */\n  value: number\n  /** Count starts from this value. */\n  from?: number\n  /** Decimal places to render. */\n  decimals?: number\n  /** Delay before starting, in seconds. */\n  delay?: number\n  className?: string\n  /** Prefix / suffix rendered around the number (e.g. \"$\", \"%\"). */\n  prefix?: string\n  suffix?: string\n}\n\n/**\n * NumberTicker — counts up (or down) to a value with a spring once it\n * scrolls into view. Part of the Better Component library.\n */\nexport function NumberTicker({\n  value,\n  from = 0,\n  decimals = 0,\n  delay = 0,\n  className,\n  prefix = \"\",\n  suffix = \"\",\n}: NumberTickerProps) {\n  const ref = useRef<HTMLSpanElement>(null)\n  const motionValue = useMotionValue(from)\n  const spring = useSpring(motionValue, { damping: 60, stiffness: 100 })\n  const inView = useInView(ref, { once: true, margin: \"0px\" })\n\n  useEffect(() => {\n    if (!inView) return\n    const id = setTimeout(() => motionValue.set(value), delay * 1000)\n    return () => clearTimeout(id)\n  }, [inView, value, delay, motionValue])\n\n  useEffect(() => {\n    const fmt = new Intl.NumberFormat(\"en-US\", {\n      minimumFractionDigits: decimals,\n      maximumFractionDigits: decimals,\n    })\n    return spring.on(\"change\", (latest) => {\n      if (ref.current)\n        ref.current.textContent = `${prefix}${fmt.format(latest)}${suffix}`\n    })\n  }, [spring, decimals, prefix, suffix])\n\n  return (\n    <span ref={ref} className={cn(\"inline-block tabular-nums\", className)}>\n      {`${prefix}${new Intl.NumberFormat(\"en-US\", {\n        minimumFractionDigits: decimals,\n        maximumFractionDigits: decimals,\n      }).format(from)}${suffix}`}\n    </span>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/number-ticker.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

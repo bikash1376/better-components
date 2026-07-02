@@ -5,10 +5,17 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ArrowLeft } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { ActionDock } from "@/components/site/action-dock"
 import { CommandWithTooltip } from "@/components/site/command-with-tooltip"
 import { ComponentSidebar } from "@/components/site/component-sidebar"
-import { GITHUB_BASE, components, getComponent } from "@/registry"
+import { ComponentPlayground } from "@/components/site/playground"
+import {
+  GITHUB_BASE,
+  components,
+  getComponent,
+  visibleComponents,
+} from "@/registry"
 
 export function generateStaticParams() {
   return components.map((c) => ({ slug: c.slug }))
@@ -45,7 +52,7 @@ export default async function ComponentPage({
 
   const code = await readSource(component.sourcePath)
   const githubUrl = `${GITHUB_BASE}/${component.sourcePath}`
-  const searchItems = components.map((c) => ({
+  const searchItems = visibleComponents.map((c) => ({
     slug: c.slug,
     name: c.name,
     category: c.category,
@@ -72,15 +79,26 @@ export default async function ComponentPage({
     <main className="relative flex min-h-svh flex-1 flex-col px-6 py-16">
       <ComponentSidebar items={searchItems} current={slug} />
 
-      <div className="mx-auto w-full max-w-4xl">
+      <div
+        className={cn(
+          "mx-auto w-full",
+          component.playground ? "max-w-5xl" : "max-w-4xl"
+        )}
+      >
         <CommandWithTooltip
           command={component.install}
           name={component.name}
           description={component.description}
         />
-        <div className="mt-4 flex min-h-[440px] w-full items-center justify-center rounded-2xl border border-border bg-muted/20">
-          <component.Demo />
-        </div>
+        {component.playground ? (
+          <div className="mt-4">
+            <ComponentPlayground slug={slug} />
+          </div>
+        ) : (
+          <div className="mt-4 flex min-h-[440px] w-full items-center justify-center rounded-2xl border border-border bg-muted/20">
+            <component.Demo />
+          </div>
+        )}
       </div>
 
       <ActionDock

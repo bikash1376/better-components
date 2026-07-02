@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "dynamic-island",
+  "title": "Dynamic Island",
+  "description": "An iPhone-style pill that fluidly resizes and morphs between states.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/dynamic-island.tsx",
+      "content": "\"use client\"\n\nimport { type ReactNode } from \"react\"\nimport { AnimatePresence, MotionConfig, motion } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface DynamicIslandProps {\n  /**\n   * Identifies the current content. Changing it morphs the island and swaps\n   * the content with a blur/scale cross-fade — mirror Apple's Dynamic Island.\n   */\n  state: string\n  children: ReactNode\n  className?: string\n  onClick?: () => void\n}\n\n/**\n * DynamicIsland — a black pill that fluidly resizes to fit whatever content it\n * holds, morphing between states the way iPhone's Dynamic Island does. Drive it\n * by changing `state` (the key) and the `children` you render for that state.\n * Category: UI. Part of the Better Component library.\n */\nexport function DynamicIsland({\n  state,\n  children,\n  className,\n  onClick,\n}: DynamicIslandProps) {\n  return (\n    <MotionConfig\n      transition={{ type: \"spring\", stiffness: 400, damping: 30, mass: 1 }}\n    >\n      <motion.div\n        layout\n        onClick={onClick}\n        style={{ borderRadius: 32 }}\n        className={cn(\n          \"flex min-h-[44px] min-w-[120px] items-center justify-center overflow-hidden bg-black text-white shadow-xl\",\n          onClick && \"cursor-pointer\",\n          className\n        )}\n      >\n        <AnimatePresence mode=\"popLayout\" initial={false}>\n          <motion.div\n            key={state}\n            layout=\"position\"\n            initial={{ opacity: 0, scale: 0.8, filter: \"blur(6px)\" }}\n            animate={{ opacity: 1, scale: 1, filter: \"blur(0px)\" }}\n            exit={{ opacity: 0, scale: 0.8, filter: \"blur(6px)\" }}\n            transition={{ duration: 0.22, ease: \"easeOut\" }}\n            className=\"flex items-center\"\n          >\n            {children}\n          </motion.div>\n        </AnimatePresence>\n      </motion.div>\n    </MotionConfig>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/dynamic-island.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

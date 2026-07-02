@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-tooltip",
+  "title": "Icon Tooltip",
+  "description": "An icon button that reveals a tooltip on hover.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/icon-tooltip.tsx",
+      "content": "\"use client\"\n\nimport { useState, type ReactNode } from \"react\"\nimport { AnimatePresence, motion } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface IconTooltipProps {\n  icon: ReactNode\n  label: string\n  className?: string\n}\n\n/**\n * IconTooltip — an icon button that reveals a tooltip on hover.\n * Category: Mouse. Part of the Better Component library.\n */\nexport function IconTooltip({ icon, label, className }: IconTooltipProps) {\n  const [open, setOpen] = useState(false)\n\n  return (\n    <div\n      className=\"relative inline-flex\"\n      onMouseEnter={() => setOpen(true)}\n      onMouseLeave={() => setOpen(false)}\n    >\n      <button\n        className={cn(\n          \"inline-flex size-12 cursor-pointer items-center justify-center rounded-xl border border-border bg-card text-foreground/80 transition-colors hover:text-foreground\",\n          className\n        )}\n      >\n        {icon}\n      </button>\n      <AnimatePresence>\n        {open && (\n          <motion.span\n            initial={{ opacity: 0, y: 4, scale: 0.9 }}\n            animate={{ opacity: 1, y: 0, scale: 1 }}\n            exit={{ opacity: 0, y: 4, scale: 0.9 }}\n            transition={{ type: \"spring\", stiffness: 400, damping: 25 }}\n            className=\"pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background\"\n          >\n            {label}\n          </motion.span>\n        )}\n      </AnimatePresence>\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/icon-tooltip.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

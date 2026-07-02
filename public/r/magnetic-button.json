@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "magnetic-button",
+  "title": "Magnetic Button",
+  "description": "A button that pulls toward the cursor on hover.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/magnetic-button.tsx",
+      "content": "\"use client\"\n\nimport { useRef, type ReactNode } from \"react\"\nimport { motion, useMotionValue, useSpring } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface MagneticButtonProps {\n  children: ReactNode\n  className?: string\n  /** How strongly the button follows the cursor (0–1). */\n  strength?: number\n}\n\n/**\n * MagneticButton — pulls toward the cursor on hover.\n * Category: Mouse. Part of the Better Component library.\n */\nexport function MagneticButton({\n  children,\n  className,\n  strength = 0.4,\n}: MagneticButtonProps) {\n  const ref = useRef<HTMLButtonElement>(null)\n  const x = useMotionValue(0)\n  const y = useMotionValue(0)\n  const springX = useSpring(x, { stiffness: 200, damping: 15 })\n  const springY = useSpring(y, { stiffness: 200, damping: 15 })\n\n  function handleMove(e: React.MouseEvent<HTMLButtonElement>) {\n    const rect = ref.current?.getBoundingClientRect()\n    if (!rect) return\n    const relX = e.clientX - (rect.left + rect.width / 2)\n    const relY = e.clientY - (rect.top + rect.height / 2)\n    x.set(relX * strength)\n    y.set(relY * strength)\n  }\n\n  function reset() {\n    x.set(0)\n    y.set(0)\n  }\n\n  return (\n    <motion.button\n      ref={ref}\n      onMouseMove={handleMove}\n      onMouseLeave={reset}\n      style={{ x: springX, y: springY }}\n      className={cn(\n        \"rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background\",\n        className\n      )}\n    >\n      {children}\n    </motion.button>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/magnetic-button.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

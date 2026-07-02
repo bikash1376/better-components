@@ -23,13 +23,26 @@ export default function Home() {
       </h1>
 
       <div className="relative z-10 mt-8 flex flex-col items-center gap-3 sm:flex-row">
-        <InstallCommand command="npx shadcn add @better-comp" />
+        <InstallCommand command="npx shadcn@latest add @bettercomp/static-button" />
         <Button
           asChild
           className="h-10 rounded-xl bg-blue-600 px-6 text-sm text-white hover:bg-blue-500"
         >
           <Link href="/components">Get Started</Link>
         </Button>
+      </div>
+
+      <div className="relative z-10 mt-5 flex items-center gap-5 text-sm text-muted-foreground">
+        <Link href="/docs" className="transition-colors hover:text-foreground">
+          Documentation
+        </Link>
+        <span className="size-1 rounded-full bg-muted-foreground/40" />
+        <Link
+          href="/components"
+          className="transition-colors hover:text-foreground"
+        >
+          Components
+        </Link>
       </div>
     </main>
   )

@@ -13,8 +13,9 @@ Open [http://localhost:3000](http://localhost:3000). AI generation in the Animat
 
 ## The site
 
-- **Gallery** (`/components`) — components grouped by category, with static "posters" that only animate on hover (so the page stays smooth). Apps and Shaders are labelled as new.
-- **Component pages** (`/components/<slug>`) — live demo, install command, and a code modal with two tabs: **Auto** (a ready-to-paste usage example) and **Manual** (the full component source).
+- **Docs** (`/docs`) — installation guide (shadcn registry / `@bettercomp` namespace / manual copy) and how to use components.
+- **Gallery** (`/components`) — components grouped by category, with static "posters" that only animate on hover (so the page stays smooth). Apps and UI are labelled as new.
+- **Component pages** (`/components/<slug>`) — install command plus either a live **Playground** (interactive controls → live props → live, copyable code) for components that define one, or a static live demo. A code modal offers two tabs: **Auto** (a ready-to-paste usage example) and **Manual** (the full component source). All code is syntax-highlighted (`prism-react-renderer`, theme-adaptive via `--code-*` CSS variables).
 - **Action dock** — the macOS-style dock in the corner: theme toggle, icon-library switcher, code view, search (Ctrl+K), GitHub link.
 - Dark theme by default.
 
@@ -23,12 +24,20 @@ Open [http://localhost:3000](http://localhost:3000). AI generation in the Animat
 | Category | Components |
 | --- | --- |
 | **Apps** | Animate — the motion design editor (see below) |
-| **Typography** | Text Shimmer, Typewriter Text, Number Ticker |
+| **UI** | Static Button (Apple-style pill), Dynamic Island (morphing iPhone pill), Infinite Canvas (windowed pannable icon grid) |
+| **Typography** | Text Shimmer, Number Ticker |
 | **Stop Motion** | Stop Motion (jitter "boil"), Flipbook (choppy page snapping), Sketch Border (boiling hand-drawn border) |
-| **Shaders** | Mesh Gradient, Neuro Noise, Metaballs — GPU shaders via [@paper-design/shaders-react](https://github.com/paper-design/shaders) |
 | **Loaders** | Dots Loader |
 | **Carousel** | Marquee |
-| **Mouse** | Magnetic Button, Icon Tooltip, Notification Card, Icon Wheel |
+| **Mouse** | Magnetic Button, Magnetic Card (3D tilt), Icon Tooltip, Notification Card |
+
+### Temporarily hidden
+
+These are still in the codebase (source files intact, direct `/components/<slug>` URLs still resolve) but are excluded from the gallery, search, sidebar, and the published registry via a `hidden: true` flag in `src/registry/index.tsx`. Remove the flag to bring one back:
+
+- **Typewriter Text** (Typography)
+- **Shaders** — the whole category: Mesh Gradient, Neuro Noise, Metaballs
+- **Icon Wheel** (Mouse)
 
 ## Animate — the motion design editor
 
@@ -56,9 +65,27 @@ src/
 registry.json             # shadcn registry manifest (pnpm registry:build)
 ```
 
+## Distributing the registry
+
+Components ship as a **shadcn registry**, so anyone can pull them straight into their own project — no npm package to install, just the source.
+
+- `registry.json` is the manifest (one entry per component, with its npm `dependencies`).
+- `pnpm registry:build` runs `shadcn build`, which inlines each component's source into `public/r/<name>.json`. Deploy the site and those files are served at `https://<your-domain>/r/<name>.json`.
+- `components.json` maps the `@bettercomp` namespace to that URL, so once deployed the install command is:
+
+  ```bash
+  npx shadcn@latest add @bettercomp/static-button
+  ```
+
+  (or the full URL, e.g. `npx shadcn@latest add https://bettercomp.dev/r/static-button.json`).
+
+Temporarily hidden components (above) are intentionally left out of `registry.json`, so they aren't published until you add them back.
+
+**Package name** — `better-components` is already taken on npm ([v1.0.11](https://www.npmjs.com/package/better-components)); `bettercomp` is free, so the registry and namespace use `bettercomp` / `@bettercomp`. Note that shadcn registries are distributed as hosted JSON, not as an npm package — you don't `npm publish` the components themselves. If you also want to reserve the name on npm, publish a thin placeholder/CLI package under `bettercomp`.
+
 ## Scripts
 
 - `pnpm dev` — dev server
 - `pnpm build` — production build
 - `pnpm lint` — ESLint (React compiler rules enabled)
-- `pnpm registry:build` — build the shadcn registry
+- `pnpm registry:build` — build the shadcn registry into `public/r/`

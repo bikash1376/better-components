@@ -31,8 +31,8 @@ export function InstallCommand({ command, className }: InstallCommandProps) {
       )}
     >
       <span>
-        npx shadcn add{" "}
-        <span className="text-neutral-100">@better-comp</span>
+        npx shadcn@latest add{" "}
+        <span className="text-neutral-100">@bettercomp</span>
       </span>
       <span className="text-neutral-400 transition-colors group-hover:text-neutral-100">
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}

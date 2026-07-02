@@ -5,6 +5,8 @@ import { StopMotion } from "@/components/better/stop-motion"
 import { Animate } from "@/components/better/animate"
 import { DotsLoader } from "@/components/better/dots-loader"
 import { MagneticButton } from "@/components/better/magnetic-button"
+import { MagneticCard } from "@/components/better/magnetic-card"
+import { StaticButton } from "@/components/better/static-button"
 import { TypewriterText } from "@/components/better/typewriter-text"
 import { NumberTicker } from "@/components/better/number-ticker"
 import { Marquee } from "@/components/better/marquee"
@@ -14,9 +16,13 @@ import { MeshGradient } from "@/components/better/mesh-gradient"
 import { NeuroNoise } from "@/components/better/neuro-noise"
 import { Metaballs } from "@/components/better/metaballs"
 import {
+  DynamicIslandDemo,
+  DynamicIslandPoster,
   IconTooltipDemo,
   IconWheelDemo,
   IconWheelPoster,
+  InfiniteCanvasDemo,
+  InfiniteCanvasPoster,
   NotificationDemo,
 } from "@/components/better/icon-demos"
 
@@ -26,6 +32,7 @@ export const GITHUB_BASE =
 
 export const categories = [
   "Apps",
+  "UI",
   "Typography",
   "Stop Motion",
   "Shaders",
@@ -35,7 +42,7 @@ export const categories = [
 ] as const
 
 /** Categories that get a "New" badge in the gallery. */
-export const newCategories: Category[] = ["Apps", "Shaders"]
+export const newCategories: Category[] = ["Apps", "UI"]
 
 export type Category = (typeof categories)[number]
 
@@ -56,6 +63,13 @@ export interface RegistryItem {
   Poster: () => ReactNode
   /** Render the detail page full-screen with no command/title chrome (for apps). */
   fullBleed?: boolean
+  /**
+   * Temporarily kept in the registry (source + direct URL still resolve) but
+   * hidden from the gallery, search, and sidebar listings.
+   */
+  hidden?: boolean
+  /** Show the interactive controls playground on the detail page (see playground.tsx). */
+  playground?: boolean
 }
 
 export const components: RegistryItem[] = [
@@ -65,7 +79,7 @@ export const components: RegistryItem[] = [
     category: "Typography",
     description: "An animated gradient sweep across text.",
     sourcePath: "src/components/better/text-shimmer.tsx",
-    install: "npx shadcn add @better-comp/text-shimmer",
+    install: "npx shadcn@latest add @bettercomp/text-shimmer",
     usage: `import { TextShimmer } from "@/components/better/text-shimmer"
 
 export function Example() {
@@ -92,7 +106,7 @@ export function Example() {
     category: "Stop Motion",
     description: "Choppy, hand-animated stop-motion 'boil' for any content.",
     sourcePath: "src/components/better/stop-motion.tsx",
-    install: "npx shadcn add @better-comp/stop-motion",
+    install: "npx shadcn@latest add @bettercomp/stop-motion",
     usage: `import { StopMotion } from "@/components/better/stop-motion"
 
 export function Example() {
@@ -115,7 +129,7 @@ export function Example() {
     category: "Stop Motion",
     description: "Snaps between children like flipbook pages — no easing, no fades.",
     sourcePath: "src/components/better/flipbook.tsx",
-    install: "npx shadcn add @better-comp/flipbook",
+    install: "npx shadcn@latest add @bettercomp/flipbook",
     usage: `import { Flipbook } from "@/components/better/flipbook"
 
 export function Example() {
@@ -142,7 +156,7 @@ export function Example() {
     category: "Stop Motion",
     description: "A hand-drawn border that boils — redrawn a few times a second.",
     sourcePath: "src/components/better/sketch-border.tsx",
-    install: "npx shadcn add @better-comp/sketch-border",
+    install: "npx shadcn@latest add @bettercomp/sketch-border",
     usage: `import { SketchBorder } from "@/components/better/sketch-border"
 
 export function Example() {
@@ -167,9 +181,10 @@ export function Example() {
     slug: "typewriter-text",
     name: "Typewriter Text",
     category: "Typography",
+    hidden: true,
     description: "Words typed out character by character with a blinking caret.",
     sourcePath: "src/components/better/typewriter-text.tsx",
-    install: "npx shadcn add @better-comp/typewriter-text",
+    install: "npx shadcn@latest add @bettercomp/typewriter-text",
     usage: `import { TypewriterText } from "@/components/better/typewriter-text"
 
 export function Example() {
@@ -206,7 +221,7 @@ export function Example() {
     category: "Typography",
     description: "A number that springs up to its value when scrolled into view.",
     sourcePath: "src/components/better/number-ticker.tsx",
-    install: "npx shadcn add @better-comp/number-ticker",
+    install: "npx shadcn@latest add @bettercomp/number-ticker",
     usage: `import { NumberTicker } from "@/components/better/number-ticker"
 
 export function Example() {
@@ -234,7 +249,7 @@ export function Example() {
     category: "Loaders",
     description: "Three dots bouncing in sequence.",
     sourcePath: "src/components/better/dots-loader.tsx",
-    install: "npx shadcn add @better-comp/dots-loader",
+    install: "npx shadcn@latest add @bettercomp/dots-loader",
     usage: `import { DotsLoader } from "@/components/better/dots-loader"
 
 export function Example() {
@@ -253,9 +268,10 @@ export function Example() {
     slug: "mesh-gradient",
     name: "Mesh Gradient",
     category: "Shaders",
+    hidden: true,
     description: "A flowing multi-color gradient rendered on the GPU (paper.design).",
     sourcePath: "src/components/better/mesh-gradient.tsx",
-    install: "npx shadcn add @better-comp/mesh-gradient",
+    install: "npx shadcn@latest add @bettercomp/mesh-gradient",
     usage: `import { MeshGradient } from "@/components/better/mesh-gradient"
 
 export function Example() {
@@ -282,9 +298,10 @@ export function Example() {
     slug: "neuro-noise",
     name: "Neuro Noise",
     category: "Shaders",
+    hidden: true,
     description: "A glowing web of fluid lines on the GPU (paper.design).",
     sourcePath: "src/components/better/neuro-noise.tsx",
-    install: "npx shadcn add @better-comp/neuro-noise",
+    install: "npx shadcn@latest add @bettercomp/neuro-noise",
     usage: `import { NeuroNoise } from "@/components/better/neuro-noise"
 
 export function Example() {
@@ -307,9 +324,10 @@ export function Example() {
     slug: "metaballs",
     name: "Metaballs",
     category: "Shaders",
+    hidden: true,
     description: "Gooey blobs merging into organic shapes on the GPU (paper.design).",
     sourcePath: "src/components/better/metaballs.tsx",
-    install: "npx shadcn add @better-comp/metaballs",
+    install: "npx shadcn@latest add @bettercomp/metaballs",
     usage: `import { Metaballs } from "@/components/better/metaballs"
 
 export function Example() {
@@ -334,7 +352,7 @@ export function Example() {
     category: "Carousel",
     description: "An infinite, seamless horizontal scroller with edge fading.",
     sourcePath: "src/components/better/marquee.tsx",
-    install: "npx shadcn add @better-comp/marquee",
+    install: "npx shadcn@latest add @bettercomp/marquee",
     usage: `import { Marquee } from "@/components/better/marquee"
 
 export function Example() {
@@ -377,7 +395,7 @@ export function Example() {
     category: "Mouse",
     description: "A button that pulls toward the cursor on hover.",
     sourcePath: "src/components/better/magnetic-button.tsx",
-    install: "npx shadcn add @better-comp/magnetic-button",
+    install: "npx shadcn@latest add @bettercomp/magnetic-button",
     usage: `import { MagneticButton } from "@/components/better/magnetic-button"
 
 export function Example() {
@@ -391,12 +409,51 @@ export function Example() {
     ),
   },
   {
+    slug: "magnetic-card",
+    name: "Magnetic Card",
+    category: "Mouse",
+    playground: true,
+    description: "A card that tilts in 3D toward the cursor, with a moving glare.",
+    sourcePath: "src/components/better/magnetic-card.tsx",
+    install: "npx shadcn@latest add @bettercomp/magnetic-card",
+    usage: `import { MagneticCard } from "@/components/better/magnetic-card"
+
+export function Example() {
+  return (
+    <MagneticCard className="w-64">
+      <h3 className="text-lg font-medium">Magnetic</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Tilts toward your cursor.
+      </p>
+    </MagneticCard>
+  )
+}`,
+    Demo: () => (
+      <MagneticCard className="w-60">
+        <h3 className="text-lg font-medium">Magnetic Card</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Move your cursor across me.
+        </p>
+      </MagneticCard>
+    ),
+    Poster: () => (
+      <div className="w-60 rounded-2xl border border-border bg-card p-6 shadow-lg">
+        <h3 className="text-lg font-medium text-muted-foreground">
+          Magnetic Card
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground/70">
+          Move your cursor across me.
+        </p>
+      </div>
+    ),
+  },
+  {
     slug: "icon-tooltip",
     name: "Icon Tooltip",
     category: "Mouse",
     description: "An icon button that reveals a tooltip on hover.",
     sourcePath: "src/components/better/icon-tooltip.tsx",
-    install: "npx shadcn add @better-comp/icon-tooltip",
+    install: "npx shadcn@latest add @bettercomp/icon-tooltip",
     usage: `import { IconTooltip } from "@/components/better/icon-tooltip"
 import { Star } from "lucide-react"
 
@@ -416,7 +473,7 @@ export function Example() {
     category: "Mouse",
     description: "A toast-style notification with a leading icon.",
     sourcePath: "src/components/better/notification-card.tsx",
-    install: "npx shadcn add @better-comp/notification-card",
+    install: "npx shadcn@latest add @bettercomp/notification-card",
     usage: `import { NotificationCard } from "@/components/better/notification-card"
 
 export function Example() {
@@ -434,9 +491,10 @@ export function Example() {
     slug: "icon-wheel",
     name: "Icon Wheel",
     category: "Mouse",
+    hidden: true,
     description: "A ring of icons that rotates as you scroll while hovered.",
     sourcePath: "src/components/better/icon-wheel.tsx",
-    install: "npx shadcn add @better-comp/icon-wheel",
+    install: "npx shadcn@latest add @bettercomp/icon-wheel",
     usage: `import { IconWheel } from "@/components/better/icon-wheel"
 
 export function Example() {
@@ -453,7 +511,7 @@ export function Example() {
     description:
       "A motion design editor: shapes, effects, undo/zoom, dual frame/time timeline, AI generation, video export.",
     sourcePath: "src/components/better/animate/animate.tsx",
-    install: "npx shadcn add @better-comp/animate",
+    install: "npx shadcn@latest add @bettercomp/animate",
     usage: `import { Animate } from "@/components/better/animate"
 
 export function Example() {
@@ -487,15 +545,114 @@ export function Example() {
       </div>
     ),
   },
+  {
+    slug: "static-button",
+    name: "Static Button",
+    category: "UI",
+    playground: true,
+    description:
+      "A clean, Apple-style pill button — variants and sizes, pure CSS, no motion.",
+    sourcePath: "src/components/better/static-button.tsx",
+    install: "npx shadcn@latest add @bettercomp/static-button",
+    usage: `import { StaticButton } from "@/components/better/static-button"
+
+export function Example() {
+  return (
+    <div className="flex gap-3">
+      <StaticButton>Buy</StaticButton>
+      <StaticButton variant="secondary">Learn more</StaticButton>
+    </div>
+  )
+}`,
+    Demo: () => (
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <StaticButton>Buy</StaticButton>
+        <StaticButton variant="secondary">Learn more</StaticButton>
+        <StaticButton variant="outline">Outline</StaticButton>
+      </div>
+    ),
+    Poster: () => (
+      <div className="flex items-center gap-3">
+        <span className="rounded-full bg-[#0071e3] px-[17px] py-2.5 text-[15px] font-medium text-white">
+          Buy
+        </span>
+        <span className="rounded-full bg-[#f5f5f7] px-[17px] py-2.5 text-[15px] font-medium text-[#1d1d1f]">
+          Learn more
+        </span>
+      </div>
+    ),
+  },
+  {
+    slug: "dynamic-island",
+    name: "Dynamic Island",
+    category: "UI",
+    playground: true,
+    description:
+      "An iPhone-style pill that fluidly resizes and morphs between states.",
+    sourcePath: "src/components/better/dynamic-island.tsx",
+    install: "npx shadcn@latest add @bettercomp/dynamic-island",
+    usage: `import { useState } from "react"
+import { DynamicIsland } from "@/components/better/dynamic-island"
+
+export function Example() {
+  const [open, setOpen] = useState(false)
+  return (
+    <DynamicIsland
+      state={open ? "open" : "idle"}
+      onClick={() => setOpen((v) => !v)}
+      className="px-4 py-2.5"
+    >
+      {open ? (
+        <span className="px-2 text-sm font-medium">Now Playing — Aura</span>
+      ) : (
+        <span className="size-2 rounded-full bg-white/40" />
+      )}
+    </DynamicIsland>
+  )
+}`,
+    Demo: DynamicIslandDemo,
+    Poster: DynamicIslandPoster,
+  },
+  {
+    slug: "infinite-canvas",
+    name: "Infinite Canvas",
+    category: "UI",
+    playground: true,
+    description:
+      "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
+    sourcePath: "src/components/better/infinite-canvas.tsx",
+    install: "npx shadcn@latest add @bettercomp/infinite-canvas",
+    usage: `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
+import { Home, Heart, Star, Bell, User, Mail } from "lucide-react"
+
+export function Example() {
+  const icons = [Home, Heart, Star, Bell, User, Mail]
+  return (
+    <InfiniteCanvas
+      className="h-80 w-full"
+      items={icons.map((Icon, i) => (
+        <Icon key={i} className="size-6" />
+      ))}
+    />
+  )
+}`,
+    Demo: InfiniteCanvasDemo,
+    Poster: InfiniteCanvasPoster,
+  },
 ]
 
 export function getComponent(slug: string): RegistryItem | undefined {
   return components.find((c) => c.slug === slug)
 }
 
+/** Everything the site lists — the registry minus any temporarily hidden items. */
+export const visibleComponents = components.filter((c) => !c.hidden)
+
 export function componentsByCategory() {
-  return categories.map((category) => ({
-    category,
-    items: components.filter((c) => c.category === category),
-  }))
+  return categories
+    .map((category) => ({
+      category,
+      items: visibleComponents.filter((c) => c.category === category),
+    }))
+    .filter((group) => group.items.length > 0)
 }
