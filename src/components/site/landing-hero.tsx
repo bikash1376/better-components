@@ -14,16 +14,22 @@ import { InstallCommand } from "@/components/site/install-command"
  * size, never cropped.
  */
 export function LandingHero() {
+  const scrollRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({
+    container: scrollRef,
     target: ref,
     offset: ["start start", "end end"],
   })
   const scale = useTransform(scrollYProgress, [0, 1], [1.08, 1])
 
   return (
-    <section ref={ref} className="relative h-[150svh]">
-      <div className="sticky top-0 flex min-h-svh flex-col items-center justify-center px-6 py-8 text-center">
+    <div
+      ref={scrollRef}
+      className="h-svh overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      <section ref={ref} className="relative h-[150svh]">
+        <div className="sticky top-0 flex h-svh flex-col items-center justify-center px-6 py-8 text-center">
         <motion.div
           style={{ scale }}
           className="relative max-h-[68svh] w-full max-w-3xl overflow-hidden rounded-t-3xl [mask-image:linear-gradient(to_bottom,black_35%,transparent_92%)]"
@@ -64,7 +70,8 @@ export function LandingHero() {
             Components
           </Link>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
   )
 }
