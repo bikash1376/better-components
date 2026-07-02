@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { CodeBlock } from "@/components/site/code-block"
+import { REGISTRY_URL, installCommand } from "@/lib/registry"
 import { visibleComponents } from "@/registry"
 
 export const metadata: Metadata = {
@@ -106,33 +107,26 @@ export default function DocsPage() {
 
           <Step n={2} title="Add a component">
             <p>
-              Every component page lists its command. Once the registry is
-              deployed, the <code className="font-mono text-foreground">@bettercomp</code>{" "}
-              namespace resolves to it:
+              Point the CLI straight at the component&apos;s URL — no config
+              needed. This is the command shown on every component page:
             </p>
-            <Card
-              lang="bash"
-              code="npx shadcn@latest add @bettercomp/static-button"
-            />
+            <Card lang="bash" code={installCommand("static-button")} />
             <p>
-              The namespace is configured once in your{" "}
+              Prefer a short name? Register the{" "}
+              <code className="font-mono text-foreground">@bettercomp</code>{" "}
+              namespace once in your{" "}
               <code className="font-mono text-foreground">components.json</code>:
             </p>
             <Card
               lang="json"
               code={`{
   "registries": {
-    "@bettercomp": "https://better-components-alpha.vercel.app/r/{name}.json"
+    "@bettercomp": "${REGISTRY_URL}/r/{name}.json"
   }
 }`}
             />
-            <p>
-              Or skip the namespace and point the CLI straight at the JSON URL:
-            </p>
-            <Card
-              lang="bash"
-              code="npx shadcn@latest add https://better-components-alpha.vercel.app/r/static-button.json"
-            />
+            <p>…then install by name:</p>
+            <Card lang="bash" code="npx shadcn@latest add @bettercomp/static-button" />
             <p>
               Either way the CLI writes the file to{" "}
               <code className="font-mono text-foreground">

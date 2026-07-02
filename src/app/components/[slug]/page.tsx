@@ -3,9 +3,10 @@ import path from "node:path"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, BookOpen } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { installCommand } from "@/lib/registry"
 import { ActionDock } from "@/components/site/action-dock"
 import { CommandWithTooltip } from "@/components/site/command-with-tooltip"
 import { ComponentSidebar } from "@/components/site/component-sidebar"
@@ -16,6 +17,9 @@ import {
   getComponent,
   visibleComponents,
 } from "@/registry"
+
+const docsLinkClass =
+  "inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-3 py-1.5 text-sm text-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted"
 
 export function generateStaticParams() {
   return components.map((c) => ({ slug: c.slug }))
@@ -61,13 +65,16 @@ export default async function ComponentPage({
   if (component.fullBleed) {
     return (
       <main className="relative flex h-svh flex-col">
-        <Link
-          href="/components"
-          className="fixed left-5 top-5 z-50 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-3 py-1.5 text-sm text-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted"
-        >
-          <ArrowLeft className="size-4" />
-          Back
-        </Link>
+        <div className="fixed left-5 top-5 z-50 flex items-center gap-2">
+          <Link href="/components" className={docsLinkClass}>
+            <ArrowLeft className="size-4" />
+            Back
+          </Link>
+          <Link href="/docs" className={docsLinkClass}>
+            <BookOpen className="size-4" />
+            Docs
+          </Link>
+        </div>
         <div className="min-h-0 flex-1 p-3">
           <component.Demo />
         </div>
@@ -79,6 +86,11 @@ export default async function ComponentPage({
     <main className="relative flex min-h-svh flex-1 flex-col px-6 py-16">
       <ComponentSidebar items={searchItems} current={slug} />
 
+      <Link href="/docs" className={cn(docsLinkClass, "fixed left-6 top-6 z-40")}>
+        <BookOpen className="size-4" />
+        Docs
+      </Link>
+
       <div
         className={cn(
           "mx-auto w-full",
@@ -86,7 +98,7 @@ export default async function ComponentPage({
         )}
       >
         <CommandWithTooltip
-          command={component.install}
+          command={installCommand(slug)}
           name={component.name}
           description={component.description}
         />

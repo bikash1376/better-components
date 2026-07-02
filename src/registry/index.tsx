@@ -57,8 +57,6 @@ export interface RegistryItem {
   description: string
   /** Path (from project root) to the component source, used for the code modal + GitHub link. */
   sourcePath: string
-  /** Dummy install command shown on the component page. */
-  install: string
   /** Minimal usage example shown in the code modal's Auto tab. */
   usage?: string
   /** Live preview (animated). */
@@ -84,7 +82,6 @@ export const components: RegistryItem[] = [
     description: "An animated gradient sweep across text.",
     playground: true,
     sourcePath: "src/components/better/text-shimmer.tsx",
-    install: "npx shadcn@latest add @bettercomp/text-shimmer",
     usage: `import { TextShimmer } from "@/components/better/text-shimmer"
 
 export function Example() {
@@ -112,7 +109,6 @@ export function Example() {
     description: "Choppy, hand-animated stop-motion 'boil' for any content.",
     playground: true,
     sourcePath: "src/components/better/stop-motion.tsx",
-    install: "npx shadcn@latest add @bettercomp/stop-motion",
     usage: `import { StopMotion } from "@/components/better/stop-motion"
 
 export function Example() {
@@ -136,7 +132,6 @@ export function Example() {
     description: "Snaps between children like flipbook pages — no easing, no fades.",
     playground: true,
     sourcePath: "src/components/better/flipbook.tsx",
-    install: "npx shadcn@latest add @bettercomp/flipbook",
     usage: `import { Flipbook } from "@/components/better/flipbook"
 
 export function Example() {
@@ -164,7 +159,6 @@ export function Example() {
     description: "A hand-drawn border that boils — redrawn a few times a second.",
     playground: true,
     sourcePath: "src/components/better/sketch-border.tsx",
-    install: "npx shadcn@latest add @bettercomp/sketch-border",
     usage: `import { SketchBorder } from "@/components/better/sketch-border"
 
 export function Example() {
@@ -192,7 +186,6 @@ export function Example() {
     hidden: true,
     description: "Words typed out character by character with a blinking caret.",
     sourcePath: "src/components/better/typewriter-text.tsx",
-    install: "npx shadcn@latest add @bettercomp/typewriter-text",
     usage: `import { TypewriterText } from "@/components/better/typewriter-text"
 
 export function Example() {
@@ -230,7 +223,6 @@ export function Example() {
     description: "A number that springs up to its value when scrolled into view.",
     playground: true,
     sourcePath: "src/components/better/number-ticker.tsx",
-    install: "npx shadcn@latest add @bettercomp/number-ticker",
     usage: `import { NumberTicker } from "@/components/better/number-ticker"
 
 export function Example() {
@@ -259,7 +251,6 @@ export function Example() {
     description: "Three dots bouncing in sequence.",
     playground: true,
     sourcePath: "src/components/better/dots-loader.tsx",
-    install: "npx shadcn@latest add @bettercomp/dots-loader",
     usage: `import { DotsLoader } from "@/components/better/dots-loader"
 
 export function Example() {
@@ -281,7 +272,6 @@ export function Example() {
     playground: true,
     description: "An equalizer of bars rising and falling in a wave.",
     sourcePath: "src/components/better/bar-loader.tsx",
-    install: "npx shadcn@latest add @bettercomp/bar-loader",
     usage: `import { BarLoader } from "@/components/better/bar-loader"
 
 export function Example() {
@@ -307,7 +297,6 @@ export function Example() {
     playground: true,
     description: "A dot-matrix grid pulsing in a diagonal wave.",
     sourcePath: "src/components/better/grid-pulse.tsx",
-    install: "npx shadcn@latest add @bettercomp/grid-pulse",
     usage: `import { GridPulse } from "@/components/better/grid-pulse"
 
 export function Example() {
@@ -329,7 +318,6 @@ export function Example() {
     playground: true,
     description: "A track ring with a rotating arc sweeping around it.",
     sourcePath: "src/components/better/ring-spinner.tsx",
-    install: "npx shadcn@latest add @bettercomp/ring-spinner",
     usage: `import { RingSpinner } from "@/components/better/ring-spinner"
 
 export function Example() {
@@ -347,7 +335,6 @@ export function Example() {
     playground: true,
     description: "Dots circling a shared centre.",
     sourcePath: "src/components/better/orbit-loader.tsx",
-    install: "npx shadcn@latest add @bettercomp/orbit-loader",
     usage: `import { OrbitLoader } from "@/components/better/orbit-loader"
 
 export function Example() {
@@ -375,7 +362,6 @@ export function Example() {
     hidden: true,
     description: "A flowing multi-color gradient rendered on the GPU (paper.design).",
     sourcePath: "src/components/better/mesh-gradient.tsx",
-    install: "npx shadcn@latest add @bettercomp/mesh-gradient",
     usage: `import { MeshGradient } from "@/components/better/mesh-gradient"
 
 export function Example() {
@@ -405,7 +391,6 @@ export function Example() {
     hidden: true,
     description: "A glowing web of fluid lines on the GPU (paper.design).",
     sourcePath: "src/components/better/neuro-noise.tsx",
-    install: "npx shadcn@latest add @bettercomp/neuro-noise",
     usage: `import { NeuroNoise } from "@/components/better/neuro-noise"
 
 export function Example() {
@@ -431,7 +416,6 @@ export function Example() {
     hidden: true,
     description: "Gooey blobs merging into organic shapes on the GPU (paper.design).",
     sourcePath: "src/components/better/metaballs.tsx",
-    install: "npx shadcn@latest add @bettercomp/metaballs",
     usage: `import { Metaballs } from "@/components/better/metaballs"
 
 export function Example() {
@@ -457,7 +441,6 @@ export function Example() {
     description: "An infinite, seamless horizontal scroller with edge fading.",
     playground: true,
     sourcePath: "src/components/better/marquee.tsx",
-    install: "npx shadcn@latest add @bettercomp/marquee",
     usage: `import { Marquee } from "@/components/better/marquee"
 
 export function Example() {
@@ -501,7 +484,6 @@ export function Example() {
     description: "A button that pulls toward the cursor on hover.",
     playground: true,
     sourcePath: "src/components/better/magnetic-button.tsx",
-    install: "npx shadcn@latest add @bettercomp/magnetic-button",
     usage: `import { MagneticButton } from "@/components/better/magnetic-button"
 
 export function Example() {
@@ -521,7 +503,6 @@ export function Example() {
     playground: true,
     description: "A card that tilts in 3D toward the cursor, with a moving glare.",
     sourcePath: "src/components/better/magnetic-card.tsx",
-    install: "npx shadcn@latest add @bettercomp/magnetic-card",
     usage: `import { MagneticCard } from "@/components/better/magnetic-card"
 
 export function Example() {
@@ -561,7 +542,6 @@ export function Example() {
     description:
       "An icon button that reveals a tooltip — choose the side and delay.",
     sourcePath: "src/components/better/icon-tooltip.tsx",
-    install: "npx shadcn@latest add @bettercomp/icon-tooltip",
     usage: `import { IconTooltip } from "@/components/better/icon-tooltip"
 import { Star } from "lucide-react"
 
@@ -585,7 +565,6 @@ export function Example() {
     description:
       "A toast system: imperative toast(), spring stacking, swipe-to-dismiss, types.",
     sourcePath: "src/components/better/toast.tsx",
-    install: "npx shadcn@latest add @bettercomp/toast",
     usage: `import { Toaster, toast } from "@/components/better/toast"
 
 export function Example() {
@@ -609,7 +588,6 @@ export function Example() {
     hidden: true,
     description: "A ring of icons that rotates as you scroll while hovered.",
     sourcePath: "src/components/better/icon-wheel.tsx",
-    install: "npx shadcn@latest add @bettercomp/icon-wheel",
     usage: `import { IconWheel } from "@/components/better/icon-wheel"
 
 export function Example() {
@@ -626,7 +604,6 @@ export function Example() {
     description:
       "A motion design editor: shapes, effects, undo/zoom, dual frame/time timeline, AI generation, video export.",
     sourcePath: "src/components/better/animate/animate.tsx",
-    install: "npx shadcn@latest add @bettercomp/animate",
     usage: `import { Animate } from "@/components/better/animate"
 
 export function Example() {
@@ -668,7 +645,6 @@ export function Example() {
     description:
       "A clean, Apple-style pill button — variants and sizes, pure CSS, no motion.",
     sourcePath: "src/components/better/static-button.tsx",
-    install: "npx shadcn@latest add @bettercomp/static-button",
     usage: `import { StaticButton } from "@/components/better/static-button"
 
 export function Example() {
@@ -705,7 +681,6 @@ export function Example() {
     description:
       "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
     sourcePath: "src/components/better/infinite-canvas.tsx",
-    install: "npx shadcn@latest add @bettercomp/infinite-canvas",
     usage: `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
 import { Home, Heart, Star, Bell, User, Mail } from "lucide-react"
 
@@ -731,7 +706,6 @@ export function Example() {
     description:
       "A textured paper surface — fractal-noise grain, soft light, and emboss.",
     sourcePath: "src/components/better/paper.tsx",
-    install: "npx shadcn@latest add @bettercomp/paper",
     usage: `import { Paper } from "@/components/better/paper"
 
 export function Example() {
