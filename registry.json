@@ -1,0 +1,142 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "better-component",
+  "homepage": "https://better-component.dev",
+  "items": [
+    {
+      "name": "text-shimmer",
+      "type": "registry:component",
+      "title": "Text Shimmer",
+      "description": "An animated gradient sweep across text, powered by motion.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/text-shimmer.tsx",
+          "type": "registry:component",
+          "target": "components/better/text-shimmer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "typewriter-text",
+      "type": "registry:component",
+      "title": "Typewriter Text",
+      "description": "Words typed out character by character with a blinking caret.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/typewriter-text.tsx",
+          "type": "registry:component",
+          "target": "components/better/typewriter-text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "number-ticker",
+      "type": "registry:component",
+      "title": "Number Ticker",
+      "description": "A number that springs up to its value when scrolled into view.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/number-ticker.tsx",
+          "type": "registry:component",
+          "target": "components/better/number-ticker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "flipbook",
+      "type": "registry:component",
+      "title": "Flipbook",
+      "description": "Snaps between children like flipbook pages — no easing, no fades.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/flipbook.tsx",
+          "type": "registry:component",
+          "target": "components/better/flipbook.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sketch-border",
+      "type": "registry:component",
+      "title": "Sketch Border",
+      "description": "A hand-drawn border that boils — redrawn a few times a second.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/sketch-border.tsx",
+          "type": "registry:component",
+          "target": "components/better/sketch-border.tsx"
+        }
+      ]
+    },
+    {
+      "name": "mesh-gradient",
+      "type": "registry:component",
+      "title": "Mesh Gradient",
+      "description": "A flowing multi-color gradient rendered on the GPU (paper.design).",
+      "dependencies": ["@paper-design/shaders-react"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/mesh-gradient.tsx",
+          "type": "registry:component",
+          "target": "components/better/mesh-gradient.tsx"
+        }
+      ]
+    },
+    {
+      "name": "neuro-noise",
+      "type": "registry:component",
+      "title": "Neuro Noise",
+      "description": "A glowing web of fluid lines on the GPU (paper.design).",
+      "dependencies": ["@paper-design/shaders-react"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/neuro-noise.tsx",
+          "type": "registry:component",
+          "target": "components/better/neuro-noise.tsx"
+        }
+      ]
+    },
+    {
+      "name": "metaballs",
+      "type": "registry:component",
+      "title": "Metaballs",
+      "description": "Gooey blobs merging into organic shapes on the GPU (paper.design).",
+      "dependencies": ["@paper-design/shaders-react"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/metaballs.tsx",
+          "type": "registry:component",
+          "target": "components/better/metaballs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "marquee",
+      "type": "registry:component",
+      "title": "Marquee",
+      "description": "An infinite, seamless horizontal scroller with edge fading.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/marquee.tsx",
+          "type": "registry:component",
+          "target": "components/better/marquee.tsx"
+        }
+      ]
+    }
+  ]
+}

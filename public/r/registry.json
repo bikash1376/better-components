@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "better-component",
+  "homepage": "https://better-component.dev",
+  "items": [
+    {
+      "name": "text-shimmer",
+      "type": "registry:component",
+      "title": "Text Shimmer",
+      "description": "An animated gradient sweep across text, powered by motion.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/text-shimmer.tsx",
+          "type": "registry:component",
+          "target": "components/better/text-shimmer.tsx"
+        }
+      ]
+    }
+  ]
+}
