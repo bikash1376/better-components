@@ -122,7 +122,7 @@ export default function DocsPage() {
               lang="json"
               code={`{
   "registries": {
-    "@bettercomp": "https://bettercomp.dev/r/{name}.json"
+    "@bettercomp": "https://better-components-alpha.vercel.app/r/{name}.json"
   }
 }`}
             />
@@ -131,7 +131,7 @@ export default function DocsPage() {
             </p>
             <Card
               lang="bash"
-              code="npx shadcn@latest add https://bettercomp.dev/r/static-button.json"
+              code="npx shadcn@latest add https://better-components-alpha.vercel.app/r/static-button.json"
             />
             <p>
               Either way the CLI writes the file to{" "}

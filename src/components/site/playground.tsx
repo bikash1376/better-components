@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react"
 import { ChevronDown } from "lucide-react"
-import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 import { useIcons } from "@/components/site/icons"
@@ -10,7 +9,6 @@ import { CodeBlock } from "@/components/site/code-block"
 import { StaticButton } from "@/components/better/static-button"
 import { MagneticCard } from "@/components/better/magnetic-card"
 import { MagneticButton } from "@/components/better/magnetic-button"
-import { DynamicIsland } from "@/components/better/dynamic-island"
 import { InfiniteCanvas } from "@/components/better/infinite-canvas"
 import { TextShimmer } from "@/components/better/text-shimmer"
 import { StopMotion } from "@/components/better/stop-motion"
@@ -24,7 +22,6 @@ import { RingSpinner } from "@/components/better/ring-spinner"
 import { OrbitLoader } from "@/components/better/orbit-loader"
 import { Marquee } from "@/components/better/marquee"
 import { IconTooltip } from "@/components/better/icon-tooltip"
-import { NotificationCard } from "@/components/better/notification-card"
 import { Paper } from "@/components/better/paper"
 
 /* ----------------------------------------------------------------- */
@@ -84,136 +81,6 @@ function TooltipPreview({
       delay={delay}
       duration={duration}
     />
-  )
-}
-
-function NotificationPreview({
-  title,
-  message,
-  accent,
-  action,
-}: {
-  title: string
-  message: string
-  accent: string
-  action: boolean
-}) {
-  const { icons } = useIcons()
-  return (
-    <NotificationCard
-      icon={<icons.star className="size-4" />}
-      title={title}
-      message={message}
-      time="now"
-      accent={accent as "neutral" | "blue" | "emerald" | "amber" | "rose"}
-      action={action ? { label: "View" } : undefined}
-      closeIcon={<icons.close className="size-4" />}
-    />
-  )
-}
-
-function islandScenarios(
-  icons: ReturnType<typeof useIcons>["icons"]
-): Record<string, { compact: ReactNode; expanded: ReactNode }> {
-  return {
-    call: {
-      compact: (
-        <div className="flex items-center gap-2.5 px-1">
-          <span className="flex size-6 items-center justify-center rounded-full bg-green-500">
-            <Phone weight="fill" className="size-3.5" />
-          </span>
-          <span className="text-sm font-medium">Aanya</span>
-        </div>
-      ),
-      expanded: (
-        <div className="flex w-60 flex-col gap-3.5">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
-              <icons.user className="size-5" />
-            </span>
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-medium">Aanya Sharma</span>
-              <span className="text-xs text-white/50">mobile · calling…</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-500 py-2 text-sm font-medium">
-              <PhoneDisconnect weight="fill" className="size-4" />
-              Decline
-            </button>
-            <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-green-500 py-2 text-sm font-medium">
-              <Phone weight="fill" className="size-4" />
-              Accept
-            </button>
-          </div>
-        </div>
-      ),
-    },
-    music: {
-      compact: (
-        <div className="flex items-center gap-2.5 px-1">
-          <icons.star className="size-4 text-lime-400" />
-          <span className="text-sm font-medium">Aura</span>
-        </div>
-      ),
-      expanded: (
-        <div className="flex w-64 flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="size-11 rounded-lg bg-gradient-to-br from-fuchsia-500 to-indigo-500" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-medium">Aura</span>
-              <span className="text-xs text-white/50">Tycho</span>
-            </div>
-          </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
-            <div className="h-full w-2/5 rounded-full bg-white" />
-          </div>
-        </div>
-      ),
-    },
-    timer: {
-      compact: (
-        <div className="flex items-center gap-2.5 px-1">
-          <span className="size-2 rounded-full bg-orange-400" />
-          <span className="font-mono text-sm font-medium tabular-nums">
-            12:30
-          </span>
-        </div>
-      ),
-      expanded: (
-        <div className="flex w-56 items-center justify-between gap-3">
-          <div className="flex flex-col leading-tight">
-            <span className="text-xs text-white/50">Timer</span>
-            <span className="font-mono text-2xl font-semibold tabular-nums">
-              12:30
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <span className="size-9 rounded-full bg-white/15" />
-            <span className="size-9 rounded-full bg-orange-500" />
-          </div>
-        </div>
-      ),
-    },
-  }
-}
-
-function IslandPreview({ scenario }: { scenario: string }) {
-  const { icons } = useIcons()
-  const [open, setOpen] = useState(false)
-  const content = islandScenarios(icons)[scenario]
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <DynamicIsland
-        open={open}
-        onOpenChange={setOpen}
-        compact={content.compact}
-        expanded={content.expanded}
-      />
-      <span className="text-xs text-muted-foreground">
-        {open ? "Click to collapse" : "Click the island to expand"}
-      </span>
-    </div>
   )
 }
 
@@ -357,40 +224,6 @@ export function Example() {
 }`,
   },
 
-  "dynamic-island": {
-    controls: [
-      {
-        type: "select",
-        prop: "scenario",
-        label: "Scenario",
-        default: "call",
-        options: [
-          { label: "Call", value: "call" },
-          { label: "Music", value: "music" },
-          { label: "Timer", value: "timer" },
-        ],
-      },
-    ],
-    render: (v) => <IslandPreview scenario={String(v.scenario)} />,
-    code: () =>
-      `import { DynamicIsland } from "@/components/better/dynamic-island"
-import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
-
-export function Example() {
-  return (
-    <DynamicIsland
-      compact={<span className="px-1 text-sm font-medium">Aanya</span>}
-      expanded={
-        <div className="flex w-60 gap-2">
-          <button className="flex-1 rounded-full bg-red-500 py-2">Decline</button>
-          <button className="flex-1 rounded-full bg-green-500 py-2">Accept</button>
-        </div>
-      }
-    />
-  )
-}`,
-  },
-
   "infinite-canvas": {
     controls: [
       { type: "number", prop: "cellSize", label: "Cell Size", min: 60, max: 140, default: 88, hint: "px" },
@@ -454,51 +287,6 @@ export function Example() {
       side="${v.side}"
       delay={${v.delay}}
       duration={${v.duration}}
-    />
-  )
-}`,
-  },
-
-  "notification-card": {
-    controls: [
-      { type: "text", prop: "title", label: "Title", default: "New star" },
-      { type: "text", prop: "message", label: "Message", default: "Someone starred your component." },
-      {
-        type: "select",
-        prop: "accent",
-        label: "Accent",
-        default: "amber",
-        options: [
-          { label: "Neutral", value: "neutral" },
-          { label: "Blue", value: "blue" },
-          { label: "Emerald", value: "emerald" },
-          { label: "Amber", value: "amber" },
-          { label: "Rose", value: "rose" },
-        ],
-      },
-      { type: "boolean", prop: "action", label: "Action", default: true },
-    ],
-    render: (v) => (
-      <NotificationPreview
-        title={String(v.title)}
-        message={String(v.message)}
-        accent={String(v.accent)}
-        action={v.action as boolean}
-      />
-    ),
-    code: (v) =>
-      `import { NotificationCard } from "@/components/better/notification-card"
-import { Star, X } from "lucide-react"
-
-export function Example() {
-  return (
-    <NotificationCard
-      icon={<Star className="size-4" />}
-      title="${v.title}"
-      message="${v.message}"
-      time="now"
-      accent="${v.accent}"${v.action ? `\n      action={{ label: "View" }}` : ""}
-      closeIcon={<X className="size-4" />}
     />
   )
 }`,
@@ -1019,7 +807,7 @@ function ControlField({
               type="color"
               value={String(value)}
               onChange={(e) => onChange(e.target.value)}
-              className="size-7 cursor-pointer rounded-md border border-border/60 bg-transparent p-0.5"
+              className="size-7 shrink-0 cursor-pointer overflow-hidden rounded-full border border-border/60 p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
             />
           </div>
         </div>

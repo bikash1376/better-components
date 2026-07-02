@@ -21,14 +21,11 @@ import { MeshGradient } from "@/components/better/mesh-gradient"
 import { NeuroNoise } from "@/components/better/neuro-noise"
 import { Metaballs } from "@/components/better/metaballs"
 import {
-  DynamicIslandDemo,
-  DynamicIslandPoster,
   IconTooltipDemo,
   IconWheelDemo,
   IconWheelPoster,
   InfiniteCanvasDemo,
   InfiniteCanvasPoster,
-  NotificationDemo,
   ToastDemo,
   ToastPoster,
 } from "@/components/better/icon-demos"
@@ -582,34 +579,6 @@ export function Example() {
     Poster: IconTooltipDemo,
   },
   {
-    slug: "notification-card",
-    name: "Notification Card",
-    category: "Mouse",
-    playground: true,
-    description:
-      "A springy, physics-flavoured toast with an accent icon and action.",
-    sourcePath: "src/components/better/notification-card.tsx",
-    install: "npx shadcn@latest add @bettercomp/notification-card",
-    usage: `import { NotificationCard } from "@/components/better/notification-card"
-import { Star, X } from "lucide-react"
-
-export function Example() {
-  return (
-    <NotificationCard
-      icon={<Star className="size-4" />}
-      title="New star"
-      message="Someone starred your component."
-      time="now"
-      accent="amber"
-      action={{ label: "View repo" }}
-      closeIcon={<X className="size-4" />}
-    />
-  )
-}`,
-    Demo: NotificationDemo,
-    Poster: NotificationDemo,
-  },
-  {
     slug: "toast",
     name: "Toast",
     category: "Mouse",
@@ -727,39 +696,6 @@ export function Example() {
         </span>
       </div>
     ),
-  },
-  {
-    slug: "dynamic-island",
-    name: "Dynamic Island",
-    category: "UI",
-    playground: true,
-    description:
-      "An iPhone-style pill that taps open from a compact pill into a card.",
-    sourcePath: "src/components/better/dynamic-island.tsx",
-    install: "npx shadcn@latest add @bettercomp/dynamic-island",
-    usage: `import { DynamicIsland } from "@/components/better/dynamic-island"
-import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
-
-export function Example() {
-  // Click the pill to expand into the card; pass your own compact/expanded.
-  return (
-    <DynamicIsland
-      compact={<span className="px-1 text-sm font-medium">Aanya</span>}
-      expanded={
-        <div className="flex w-60 gap-2">
-          <button className="flex-1 rounded-full bg-red-500 py-2 text-sm">
-            Decline
-          </button>
-          <button className="flex-1 rounded-full bg-green-500 py-2 text-sm">
-            Accept
-          </button>
-        </div>
-      }
-    />
-  )
-}`,
-    Demo: DynamicIslandDemo,
-    Poster: DynamicIslandPoster,
   },
   {
     slug: "infinite-canvas",

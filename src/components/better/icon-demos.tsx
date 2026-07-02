@@ -1,13 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
-
 import { useIcons } from "@/components/site/icons"
 import { IconTooltip } from "@/components/better/icon-tooltip"
-import { NotificationCard } from "@/components/better/notification-card"
 import { IconWheel } from "@/components/better/icon-wheel"
-import { DynamicIsland } from "@/components/better/dynamic-island"
 import { InfiniteCanvas } from "@/components/better/infinite-canvas"
 import { Toaster, toast } from "@/components/better/toast"
 
@@ -20,21 +15,6 @@ export function IconTooltipDemo() {
   const { icons } = useIcons()
   return (
     <IconTooltip icon={<icons.settings className="size-5" />} label="Settings" />
-  )
-}
-
-export function NotificationDemo() {
-  const { icons } = useIcons()
-  return (
-    <NotificationCard
-      icon={<icons.star className="size-4" />}
-      title="New star"
-      message="Someone starred your component."
-      time="now"
-      accent="amber"
-      action={{ label: "View repo" }}
-      closeIcon={<icons.close className="size-4" />}
-    />
   )
 }
 
@@ -75,74 +55,6 @@ export function IconWheelPoster() {
       }))}
     />
   )
-}
-
-/* ---------------------------------------------------------------- */
-/* Dynamic Island                                                    */
-/* ---------------------------------------------------------------- */
-
-/** A call scenario: compact pill and the expanded accept/decline card. */
-export function IslandCall({ icons }: { icons: ReturnType<typeof useIcons>["icons"] }) {
-  return {
-    compact: (
-      <div className="flex items-center gap-2.5 px-1">
-        <span className="flex size-6 items-center justify-center rounded-full bg-green-500">
-          <Phone weight="fill" className="size-3.5" />
-        </span>
-        <span className="text-sm font-medium">Aanya</span>
-        <span className="text-xs text-white/50">mobile</span>
-      </div>
-    ),
-    expanded: (
-      <div className="flex w-60 flex-col gap-3.5">
-        <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
-            <icons.user className="size-5" />
-          </span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Aanya Sharma</span>
-            <span className="text-xs text-white/50">mobile · calling…</span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-500 py-2 text-sm font-medium">
-            <PhoneDisconnect weight="fill" className="size-4" />
-            Decline
-          </button>
-          <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-green-500 py-2 text-sm font-medium">
-            <Phone weight="fill" className="size-4" />
-            Accept
-          </button>
-        </div>
-      </div>
-    ),
-  }
-}
-
-export function DynamicIslandDemo() {
-  const { icons } = useIcons()
-  const [open, setOpen] = useState(false)
-  const call = IslandCall({ icons })
-
-  // Auto-toggle so the gallery card animates; still clickable to expand.
-  useEffect(() => {
-    const id = setInterval(() => setOpen((o) => !o), 2600)
-    return () => clearInterval(id)
-  }, [])
-
-  return (
-    <DynamicIsland
-      open={open}
-      onOpenChange={setOpen}
-      compact={call.compact}
-      expanded={call.expanded}
-    />
-  )
-}
-
-/** Static black pill for the gallery poster. */
-export function DynamicIslandPoster() {
-  return <span className="h-9 w-28 rounded-full bg-black" />
 }
 
 /* ---------------------------------------------------------------- */

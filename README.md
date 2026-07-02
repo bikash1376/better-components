@@ -24,12 +24,12 @@ Open [http://localhost:3000](http://localhost:3000). AI generation in the Animat
 | Category | Components |
 | --- | --- |
 | **Apps** | Animate — the motion design editor (see below) |
-| **UI** | Static Button (Apple-style pill), Dynamic Island (tap-to-expand iPhone pill), Infinite Canvas (windowed pannable icon grid), Paper (textured paper surface) |
+| **UI** | Static Button (Apple-style pill), Infinite Canvas (windowed pannable icon grid), Paper (textured paper surface) |
 | **Typography** | Text Shimmer, Number Ticker |
 | **Stop Motion** | Stop Motion (jitter "boil"), Flipbook (choppy page snapping), Sketch Border (boiling hand-drawn border) |
 | **Loaders** | Dots Loader, Bar Loader, Grid Pulse, Ring Spinner, Orbit Loader |
 | **Carousel** | Marquee |
-| **Mouse** | Magnetic Button, Magnetic Card (3D tilt), Icon Tooltip, Notification Card, Toast (Toaster + `toast()`) |
+| **Mouse** | Magnetic Button, Magnetic Card (3D tilt), Icon Tooltip, Toast (Toaster + `toast()`) |
 
 ### Temporarily hidden
 
