@@ -124,6 +124,21 @@
       ]
     },
     {
+      "name": "toast",
+      "type": "registry:component",
+      "title": "Toast",
+      "description": "A toast system: imperative toast(), spring stacking, swipe-to-dismiss, types.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/toast.tsx",
+          "type": "registry:component",
+          "target": "components/better/toast.tsx"
+        }
+      ]
+    },
+    {
       "name": "text-shimmer",
       "type": "registry:component",
       "title": "Text Shimmer",
@@ -210,6 +225,66 @@
           "path": "src/components/better/dots-loader.tsx",
           "type": "registry:component",
           "target": "components/better/dots-loader.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bar-loader",
+      "type": "registry:component",
+      "title": "Bar Loader",
+      "description": "An equalizer of bars rising and falling in a wave.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/bar-loader.tsx",
+          "type": "registry:component",
+          "target": "components/better/bar-loader.tsx"
+        }
+      ]
+    },
+    {
+      "name": "grid-pulse",
+      "type": "registry:component",
+      "title": "Grid Pulse",
+      "description": "A dot-matrix grid pulsing in a diagonal wave.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/grid-pulse.tsx",
+          "type": "registry:component",
+          "target": "components/better/grid-pulse.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ring-spinner",
+      "type": "registry:component",
+      "title": "Ring Spinner",
+      "description": "A track ring with a rotating arc sweeping around it.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/ring-spinner.tsx",
+          "type": "registry:component",
+          "target": "components/better/ring-spinner.tsx"
+        }
+      ]
+    },
+    {
+      "name": "orbit-loader",
+      "type": "registry:component",
+      "title": "Orbit Loader",
+      "description": "Dots circling a shared centre.",
+      "dependencies": ["motion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/orbit-loader.tsx",
+          "type": "registry:component",
+          "target": "components/better/orbit-loader.tsx"
         }
       ]
     },

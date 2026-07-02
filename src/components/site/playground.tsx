@@ -18,6 +18,10 @@ import { Flipbook } from "@/components/better/flipbook"
 import { SketchBorder } from "@/components/better/sketch-border"
 import { NumberTicker } from "@/components/better/number-ticker"
 import { DotsLoader } from "@/components/better/dots-loader"
+import { BarLoader } from "@/components/better/bar-loader"
+import { GridPulse } from "@/components/better/grid-pulse"
+import { RingSpinner } from "@/components/better/ring-spinner"
+import { OrbitLoader } from "@/components/better/orbit-loader"
 import { Marquee } from "@/components/better/marquee"
 import { IconTooltip } from "@/components/better/icon-tooltip"
 import { NotificationCard } from "@/components/better/notification-card"
@@ -62,7 +66,15 @@ interface PlaygroundConfig {
 /* Previews that need hooks live as their own components              */
 /* ----------------------------------------------------------------- */
 
-function TooltipPreview({ side, delay }: { side: string; delay: number }) {
+function TooltipPreview({
+  side,
+  delay,
+  duration,
+}: {
+  side: string
+  delay: number
+  duration: number
+}) {
   const { icons } = useIcons()
   return (
     <IconTooltip
@@ -70,6 +82,7 @@ function TooltipPreview({ side, delay }: { side: string; delay: number }) {
       label="Settings"
       side={side as "top" | "bottom" | "left" | "right"}
       delay={delay}
+      duration={duration}
     />
   )
 }
@@ -420,9 +433,14 @@ export function Example() {
         ],
       },
       { type: "number", prop: "delay", label: "Delay", min: 0, max: 1000, step: 50, default: 0, hint: "ms" },
+      { type: "number", prop: "duration", label: "Auto-hide", min: 0, max: 4000, step: 250, default: 0, hint: "ms" },
     ],
     render: (v) => (
-      <TooltipPreview side={String(v.side)} delay={v.delay as number} />
+      <TooltipPreview
+        side={String(v.side)}
+        delay={v.delay as number}
+        duration={v.duration as number}
+      />
     ),
     code: (v) =>
       `import { IconTooltip } from "@/components/better/icon-tooltip"
@@ -435,6 +453,7 @@ export function Example() {
       label="Settings"
       side="${v.side}"
       delay={${v.delay}}
+      duration={${v.duration}}
     />
   )
 }`,
@@ -513,14 +532,20 @@ export function Example() {
 
   "number-ticker": {
     controls: [
-      { type: "number", prop: "value", label: "Value", min: 0, max: 50000, step: 500, default: 12480 },
+      { type: "number", prop: "from", label: "Start", min: 0, max: 50000, step: 500, default: 0 },
+      { type: "number", prop: "value", label: "End", min: 0, max: 50000, step: 500, default: 12480 },
       { type: "number", prop: "decimals", label: "Decimals", min: 0, max: 2, default: 0 },
+      { type: "text", prop: "prefix", label: "Prefix", default: "" },
       { type: "text", prop: "suffix", label: "Suffix", default: "+" },
     ],
+    // Key on `from` so changing the start value restarts the count from there.
     render: (v) => (
       <NumberTicker
+        key={`${v.from}`}
+        from={v.from as number}
         value={v.value as number}
         decimals={v.decimals as number}
+        prefix={String(v.prefix)}
         suffix={String(v.suffix)}
         className="text-5xl font-semibold"
       />
@@ -531,8 +556,10 @@ export function Example() {
 export function Example() {
   return (
     <NumberTicker
+      from={${v.from}}
       value={${v.value}}
       decimals={${v.decimals}}
+      prefix="${v.prefix}"
       suffix="${v.suffix}"
       className="text-5xl font-semibold"
     />
@@ -543,13 +570,148 @@ export function Example() {
   "dots-loader": {
     controls: [
       { type: "number", prop: "size", label: "Size", min: 6, max: 24, default: 12, hint: "px" },
+      { type: "number", prop: "count", label: "Count", min: 2, max: 6, default: 3 },
+      { type: "number", prop: "gap", label: "Gap", min: 2, max: 20, default: 8, hint: "px" },
+      { type: "number", prop: "bounce", label: "Bounce", min: 4, max: 30, default: 12, hint: "px" },
+      { type: "number", prop: "speed", label: "Speed", min: 0.4, max: 2, step: 0.1, default: 0.9, hint: "s" },
+      { type: "color", prop: "color", label: "Color", default: "#6366f1" },
     ],
-    render: (v) => <DotsLoader size={v.size as number} />,
+    render: (v) => (
+      <DotsLoader
+        size={v.size as number}
+        count={v.count as number}
+        gap={v.gap as number}
+        bounce={v.bounce as number}
+        speed={v.speed as number}
+        color={String(v.color)}
+      />
+    ),
     code: (v) =>
       `import { DotsLoader } from "@/components/better/dots-loader"
 
 export function Example() {
-  return <DotsLoader size={${v.size}} />
+  return (
+    <DotsLoader
+      size={${v.size}}
+      count={${v.count}}
+      gap={${v.gap}}
+      bounce={${v.bounce}}
+      speed={${v.speed}}
+      color="${v.color}"
+    />
+  )
+}`,
+  },
+
+  "bar-loader": {
+    controls: [
+      { type: "number", prop: "count", label: "Count", min: 3, max: 9, default: 5 },
+      { type: "number", prop: "width", label: "Width", min: 2, max: 10, default: 4, hint: "px" },
+      { type: "number", prop: "height", label: "Height", min: 16, max: 48, default: 28, hint: "px" },
+      { type: "number", prop: "gap", label: "Gap", min: 2, max: 12, default: 4, hint: "px" },
+      { type: "number", prop: "speed", label: "Speed", min: 0.4, max: 2, step: 0.1, default: 1, hint: "s" },
+      { type: "color", prop: "color", label: "Color", default: "#6366f1" },
+    ],
+    render: (v) => (
+      <BarLoader
+        count={v.count as number}
+        width={v.width as number}
+        height={v.height as number}
+        gap={v.gap as number}
+        speed={v.speed as number}
+        color={String(v.color)}
+      />
+    ),
+    code: (v) =>
+      `import { BarLoader } from "@/components/better/bar-loader"
+
+export function Example() {
+  return (
+    <BarLoader count={${v.count}} width={${v.width}} height={${v.height}} gap={${v.gap}} speed={${v.speed}} color="${v.color}" />
+  )
+}`,
+  },
+
+  "grid-pulse": {
+    controls: [
+      { type: "number", prop: "rows", label: "Rows", min: 2, max: 6, default: 3 },
+      { type: "number", prop: "cols", label: "Cols", min: 2, max: 6, default: 3 },
+      { type: "number", prop: "dotSize", label: "Dot Size", min: 4, max: 14, default: 8, hint: "px" },
+      { type: "number", prop: "gap", label: "Gap", min: 2, max: 14, default: 6, hint: "px" },
+      { type: "number", prop: "speed", label: "Speed", min: 0.6, max: 3, step: 0.1, default: 1.4, hint: "s" },
+      { type: "color", prop: "color", label: "Color", default: "#6366f1" },
+    ],
+    render: (v) => (
+      <GridPulse
+        rows={v.rows as number}
+        cols={v.cols as number}
+        dotSize={v.dotSize as number}
+        gap={v.gap as number}
+        speed={v.speed as number}
+        color={String(v.color)}
+      />
+    ),
+    code: (v) =>
+      `import { GridPulse } from "@/components/better/grid-pulse"
+
+export function Example() {
+  return (
+    <GridPulse rows={${v.rows}} cols={${v.cols}} dotSize={${v.dotSize}} gap={${v.gap}} speed={${v.speed}} color="${v.color}" />
+  )
+}`,
+  },
+
+  "ring-spinner": {
+    controls: [
+      { type: "number", prop: "size", label: "Size", min: 20, max: 72, default: 40, hint: "px" },
+      { type: "number", prop: "thickness", label: "Thickness", min: 2, max: 10, default: 4, hint: "px" },
+      { type: "number", prop: "arc", label: "Arc", min: 0.1, max: 0.9, step: 0.05, default: 0.25 },
+      { type: "number", prop: "speed", label: "Speed", min: 0.4, max: 2.5, step: 0.1, default: 0.9, hint: "s" },
+      { type: "color", prop: "color", label: "Color", default: "#6366f1" },
+    ],
+    render: (v) => (
+      <RingSpinner
+        size={v.size as number}
+        thickness={v.thickness as number}
+        arc={v.arc as number}
+        speed={v.speed as number}
+        color={String(v.color)}
+      />
+    ),
+    code: (v) =>
+      `import { RingSpinner } from "@/components/better/ring-spinner"
+
+export function Example() {
+  return (
+    <RingSpinner size={${v.size}} thickness={${v.thickness}} arc={${v.arc}} speed={${v.speed}} color="${v.color}" />
+  )
+}`,
+  },
+
+  "orbit-loader": {
+    controls: [
+      { type: "number", prop: "size", label: "Size", min: 24, max: 72, default: 40, hint: "px" },
+      { type: "number", prop: "count", label: "Count", min: 2, max: 8, default: 3 },
+      { type: "number", prop: "dotSize", label: "Dot Size", min: 4, max: 14, default: 8, hint: "px" },
+      { type: "number", prop: "speed", label: "Speed", min: 0.5, max: 3, step: 0.1, default: 1.2, hint: "s" },
+      { type: "color", prop: "color", label: "Color", default: "#6366f1" },
+    ],
+    render: (v) => (
+      <OrbitLoader
+        size={v.size as number}
+        count={v.count as number}
+        dotSize={v.dotSize as number}
+        speed={v.speed as number}
+        color={String(v.color)}
+      />
+    ),
+    code: (v) =>
+      `import { OrbitLoader } from "@/components/better/orbit-loader"
+
+export function Example() {
+  return (
+    <OrbitLoader size={${v.size}} count={${v.count}} dotSize={${v.dotSize}} speed={${v.speed}} color="${v.color}" />
+  )
 }`,
   },
 
@@ -557,7 +719,8 @@ export function Example() {
     controls: [
       { type: "number", prop: "duration", label: "Duration", min: 4, max: 40, default: 14, hint: "s" },
       { type: "boolean", prop: "reverse", label: "Reverse", default: false },
-      { type: "boolean", prop: "pauseOnHover", label: "Pause on hover", default: true },
+      { type: "boolean", prop: "pauseOnHover", label: "Pause on hover", default: false },
+      { type: "boolean", prop: "slowOnHover", label: "Slow on hover", default: true },
     ],
     render: (v) => (
       <Marquee
@@ -565,6 +728,7 @@ export function Example() {
         duration={v.duration as number}
         reverse={v.reverse as boolean}
         pauseOnHover={v.pauseOnHover as boolean}
+        slowOnHover={v.slowOnHover as boolean}
       >
         {["Motion", "Design", "Animate", "Export", "Create"].map((t) => (
           <span
@@ -579,12 +743,16 @@ export function Example() {
     code: (v) =>
       `import { Marquee } from "@/components/better/marquee"
 
+const items = ["Motion", "Design", "Animate", "Export", "Create"]
+
 export function Example() {
   return (
-    <Marquee duration={${v.duration}} reverse={${v.reverse}} pauseOnHover={${v.pauseOnHover}}>
-      <span>Motion</span>
-      <span>Design</span>
-      <span>Animate</span>
+    <Marquee duration={${v.duration}} reverse={${v.reverse}} pauseOnHover={${v.pauseOnHover}} slowOnHover={${v.slowOnHover}}>
+      {items.map((t) => (
+        <span key={t} className="rounded-full border border-border px-4 py-1.5 text-sm font-medium">
+          {t}
+        </span>
+      ))}
     </Marquee>
   )
 }`,
@@ -673,15 +841,32 @@ export function Example() {
   paper: {
     controls: [
       { type: "color", prop: "color", label: "Color", default: "#f4efe4" },
-      { type: "number", prop: "noise", label: "Noise", min: 0, max: 1, step: 0.05, default: 0.4 },
+      { type: "number", prop: "grain", label: "Grain", min: 0, max: 1, step: 0.05, default: 0.4 },
+      { type: "number", prop: "fibers", label: "Fibers", min: 0, max: 1, step: 0.05, default: 0.25 },
       { type: "number", prop: "strength", label: "Strength", min: 0, max: 1, step: 0.05, default: 0.6 },
+      {
+        type: "select",
+        prop: "edge",
+        label: "Edge",
+        default: "straight",
+        options: [
+          { label: "Straight", value: "straight" },
+          { label: "Hand-drawn", value: "handdrawn" },
+          { label: "Torn", value: "torn" },
+          { label: "Cutout", value: "cutout" },
+        ],
+      },
+      { type: "number", prop: "distort", label: "Distort", min: 0, max: 12, default: 0, hint: "px" },
       { type: "number", prop: "radius", label: "Radius", min: 0, max: 40, default: 16, hint: "px" },
     ],
     render: (v) => (
       <Paper
         color={String(v.color)}
-        noise={v.noise as number}
+        grain={v.grain as number}
+        fibers={v.fibers as number}
         strength={v.strength as number}
+        edge={v.edge as "straight" | "handdrawn" | "torn" | "cutout"}
+        distort={v.distort as number}
         radius={v.radius as number}
         className="flex h-48 w-72 items-center justify-center"
       >
@@ -693,8 +878,17 @@ export function Example() {
 
 export function Example() {
   return (
-    <Paper color="${v.color}" noise={${v.noise}} strength={${v.strength}} radius={${v.radius}} className="h-48 w-72">
-      <div className="p-6">Paper</div>
+    <Paper
+      color="${v.color}"
+      grain={${v.grain}}
+      fibers={${v.fibers}}
+      strength={${v.strength}}
+      edge="${v.edge}"
+      distort={${v.distort}}
+      radius={${v.radius}}
+      className="flex h-48 w-72 items-center justify-center"
+    >
+      <span className="text-xl font-medium text-neutral-800">Paper</span>
     </Paper>
   )
 }`,

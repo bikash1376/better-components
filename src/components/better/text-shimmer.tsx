@@ -49,6 +49,9 @@ export function TextShimmer({
   return (
     // eslint-disable-next-line react-hooks/static-components
     <MotionComponent
+      // Remount when duration changes so the infinite loop restarts at the new
+      // speed immediately (motion otherwise applies it only on the next cycle).
+      key={duration}
       className={cn(
         "relative inline-block bg-[length:250%_100%,auto] bg-clip-text",
         "text-transparent [--base-color:var(--color-neutral-500)]",

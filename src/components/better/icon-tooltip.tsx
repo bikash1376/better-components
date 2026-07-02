@@ -15,6 +15,8 @@ interface IconTooltipProps {
   side?: Side
   /** Delay before it appears, in ms. */
   delay?: number
+  /** Auto-hide after this many ms once shown (0 = stay until mouse leaves). */
+  duration?: number
 }
 
 const POSITION: Record<Side, string> = {
@@ -42,21 +44,33 @@ export function IconTooltip({
   className,
   side = "top",
   delay = 0,
+  duration = 0,
 }: IconTooltipProps) {
   const [open, setOpen] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function clearTimers() {
+    if (showTimer.current) clearTimeout(showTimer.current)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+  }
 
   function show() {
-    timer.current = setTimeout(() => setOpen(true), delay)
+    clearTimers()
+    showTimer.current = setTimeout(() => {
+      setOpen(true)
+      // Auto-hide after `duration`, even if still hovered.
+      if (duration > 0) {
+        hideTimer.current = setTimeout(() => setOpen(false), duration)
+      }
+    }, delay)
   }
   function hide() {
-    if (timer.current) clearTimeout(timer.current)
+    clearTimers()
     setOpen(false)
   }
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
+  useEffect(() => clearTimers, [])
 
   const offset = OFFSET[side]
 

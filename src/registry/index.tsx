@@ -4,6 +4,10 @@ import { TextShimmer } from "@/components/better/text-shimmer"
 import { StopMotion } from "@/components/better/stop-motion"
 import { Animate } from "@/components/better/animate"
 import { DotsLoader } from "@/components/better/dots-loader"
+import { BarLoader } from "@/components/better/bar-loader"
+import { GridPulse } from "@/components/better/grid-pulse"
+import { RingSpinner } from "@/components/better/ring-spinner"
+import { OrbitLoader } from "@/components/better/orbit-loader"
 import { MagneticButton } from "@/components/better/magnetic-button"
 import { MagneticCard } from "@/components/better/magnetic-card"
 import { StaticButton } from "@/components/better/static-button"
@@ -25,6 +29,8 @@ import {
   InfiniteCanvasDemo,
   InfiniteCanvasPoster,
   NotificationDemo,
+  ToastDemo,
+  ToastPoster,
 } from "@/components/better/icon-demos"
 
 /** Base URL of the GitHub repo that hosts the component source. Dummy for now. */
@@ -272,6 +278,100 @@ export function Example() {
     ),
   },
   {
+    slug: "bar-loader",
+    name: "Bar Loader",
+    category: "Loaders",
+    playground: true,
+    description: "An equalizer of bars rising and falling in a wave.",
+    sourcePath: "src/components/better/bar-loader.tsx",
+    install: "npx shadcn@latest add @bettercomp/bar-loader",
+    usage: `import { BarLoader } from "@/components/better/bar-loader"
+
+export function Example() {
+  return <BarLoader count={5} color="#6366f1" />
+}`,
+    Demo: () => <BarLoader color="#6366f1" />,
+    Poster: () => (
+      <div className="flex h-7 items-end gap-1">
+        {[0.5, 1, 0.4, 0.8, 0.6].map((h, i) => (
+          <span
+            key={i}
+            className="w-1 rounded-full bg-muted-foreground/50"
+            style={{ height: `${h * 100}%` }}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
+    slug: "grid-pulse",
+    name: "Grid Pulse",
+    category: "Loaders",
+    playground: true,
+    description: "A dot-matrix grid pulsing in a diagonal wave.",
+    sourcePath: "src/components/better/grid-pulse.tsx",
+    install: "npx shadcn@latest add @bettercomp/grid-pulse",
+    usage: `import { GridPulse } from "@/components/better/grid-pulse"
+
+export function Example() {
+  return <GridPulse rows={3} cols={3} color="#6366f1" />
+}`,
+    Demo: () => <GridPulse color="#6366f1" />,
+    Poster: () => (
+      <div className="grid grid-cols-3 gap-1.5">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <span key={i} className="size-2 rounded-full bg-muted-foreground/50" />
+        ))}
+      </div>
+    ),
+  },
+  {
+    slug: "ring-spinner",
+    name: "Ring Spinner",
+    category: "Loaders",
+    playground: true,
+    description: "A track ring with a rotating arc sweeping around it.",
+    sourcePath: "src/components/better/ring-spinner.tsx",
+    install: "npx shadcn@latest add @bettercomp/ring-spinner",
+    usage: `import { RingSpinner } from "@/components/better/ring-spinner"
+
+export function Example() {
+  return <RingSpinner size={40} color="#6366f1" />
+}`,
+    Demo: () => <RingSpinner color="#6366f1" />,
+    Poster: () => (
+      <div className="size-10 rounded-full border-4 border-muted-foreground/20 border-t-muted-foreground/60" />
+    ),
+  },
+  {
+    slug: "orbit-loader",
+    name: "Orbit Loader",
+    category: "Loaders",
+    playground: true,
+    description: "Dots circling a shared centre.",
+    sourcePath: "src/components/better/orbit-loader.tsx",
+    install: "npx shadcn@latest add @bettercomp/orbit-loader",
+    usage: `import { OrbitLoader } from "@/components/better/orbit-loader"
+
+export function Example() {
+  return <OrbitLoader size={40} count={3} color="#6366f1" />
+}`,
+    Demo: () => <OrbitLoader color="#6366f1" />,
+    Poster: () => (
+      <div className="relative size-10">
+        {[0, 120, 240].map((deg) => (
+          <span
+            key={deg}
+            className="absolute left-1/2 top-1/2 size-2 rounded-full bg-muted-foreground/50"
+            style={{
+              transform: `rotate(${deg}deg) translateX(16px)`,
+            }}
+          />
+        ))}
+      </div>
+    ),
+  },
+  {
     slug: "mesh-gradient",
     name: "Mesh Gradient",
     category: "Shaders",
@@ -510,6 +610,30 @@ export function Example() {
     Poster: NotificationDemo,
   },
   {
+    slug: "toast",
+    name: "Toast",
+    category: "Mouse",
+    description:
+      "A toast system: imperative toast(), spring stacking, swipe-to-dismiss, types.",
+    sourcePath: "src/components/better/toast.tsx",
+    install: "npx shadcn@latest add @bettercomp/toast",
+    usage: `import { Toaster, toast } from "@/components/better/toast"
+
+export function Example() {
+  return (
+    <>
+      {/* Mount <Toaster /> once near your app root. */}
+      <Toaster position="bottom-right" />
+      <button onClick={() => toast.success("Saved", { description: "All good." })}>
+        Show toast
+      </button>
+    </>
+  )
+}`,
+    Demo: ToastDemo,
+    Poster: ToastPoster,
+  },
+  {
     slug: "icon-wheel",
     name: "Icon Wheel",
     category: "Mouse",
@@ -676,14 +800,15 @@ export function Example() {
 
 export function Example() {
   return (
-    <Paper noise={0.4} strength={0.6} className="h-48 w-72">
+    <Paper grain={0.4} fibers={0.25} edge="torn" className="h-48 w-72">
       <div className="p-6 text-neutral-800">Paper</div>
     </Paper>
   )
 }`,
     Demo: () => (
       <Paper
-        noise={0.4}
+        grain={0.4}
+        fibers={0.25}
         strength={0.6}
         className="flex h-44 w-64 items-center justify-center"
       >

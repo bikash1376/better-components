@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "grid-pulse",
+  "title": "Grid Pulse",
+  "description": "A dot-matrix grid pulsing in a diagonal wave.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/grid-pulse.tsx",
+      "content": "\"use client\"\n\nimport { motion } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface GridPulseProps {\n  className?: string\n  /** Grid rows. */\n  rows?: number\n  /** Grid columns. */\n  cols?: number\n  /** Dot diameter in px. */\n  dotSize?: number\n  /** Gap between dots in px. */\n  gap?: number\n  /** Dot colour (any CSS color). */\n  color?: string\n  /** Seconds for one cycle. */\n  speed?: number\n}\n\n/**\n * GridPulse — a dot-matrix grid pulsing in a diagonal wave.\n * Category: Loaders. Part of the Better Component library.\n */\nexport function GridPulse({\n  className,\n  rows = 3,\n  cols = 3,\n  dotSize = 8,\n  gap = 6,\n  color = \"currentColor\",\n  speed = 1.4,\n}: GridPulseProps) {\n  return (\n    <div\n      className={cn(\"grid w-fit\", className)}\n      style={{\n        gap,\n        gridTemplateColumns: `repeat(${cols}, ${dotSize}px)`,\n      }}\n    >\n      {Array.from({ length: rows * cols }).map((_, i) => {\n        const r = Math.floor(i / cols)\n        const c = i % cols\n        return (\n          <motion.span\n            key={i}\n            className=\"rounded-full\"\n            style={{ width: dotSize, height: dotSize, backgroundColor: color }}\n            animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1, 0.7] }}\n            transition={{\n              duration: speed,\n              repeat: Infinity,\n              ease: \"easeInOut\",\n              delay: ((r + c) / (rows + cols)) * speed,\n            }}\n          />\n        )\n      })}\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/grid-pulse.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

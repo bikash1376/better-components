@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "bar-loader",
+  "title": "Bar Loader",
+  "description": "An equalizer of bars rising and falling in a wave.",
+  "dependencies": [
+    "motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/bar-loader.tsx",
+      "content": "\"use client\"\n\nimport { motion } from \"motion/react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface BarLoaderProps {\n  className?: string\n  /** Number of bars. */\n  count?: number\n  /** Bar width in px. */\n  width?: number\n  /** Max bar height in px. */\n  height?: number\n  /** Gap between bars in px. */\n  gap?: number\n  /** Bar colour (any CSS color). */\n  color?: string\n  /** Seconds for one cycle. */\n  speed?: number\n}\n\n/**\n * BarLoader — an equalizer of bars rising and falling in a wave.\n * Category: Loaders. Part of the Better Component library.\n */\nexport function BarLoader({\n  className,\n  count = 5,\n  width = 4,\n  height = 28,\n  gap = 4,\n  color = \"currentColor\",\n  speed = 1,\n}: BarLoaderProps) {\n  return (\n    <div\n      className={cn(\"flex items-center\", className)}\n      style={{ gap, height }}\n    >\n      {Array.from({ length: count }).map((_, i) => (\n        <motion.span\n          className=\"rounded-full\"\n          key={i}\n          style={{ width, height, backgroundColor: color, originY: 1 }}\n          animate={{ scaleY: [0.25, 1, 0.25] }}\n          transition={{\n            duration: speed,\n            repeat: Infinity,\n            ease: \"easeInOut\",\n            delay: (i / count) * speed,\n          }}\n        />\n      ))}\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/bar-loader.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
