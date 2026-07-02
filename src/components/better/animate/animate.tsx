@@ -995,10 +995,11 @@ export function Animate({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        {/* Left: shape templates + upload + animation templates */}
-        <aside className="relative flex w-[74px] shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-border p-2">
-          <div className="grid grid-cols-2 gap-1.5">
+      <div className="flex min-h-0 flex-1 max-md:flex-col">
+        {/* Left: shape templates + upload + animation templates
+            (becomes a horizontal scrolling tool strip on mobile) */}
+        <aside className="relative flex w-[74px] shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-border p-2 max-md:w-full max-md:flex-row max-md:items-center max-md:overflow-x-auto max-md:overflow-y-hidden max-md:border-b max-md:border-r-0">
+          <div className="grid grid-cols-2 gap-1.5 max-md:flex max-md:flex-nowrap">
             {SHAPE_TEMPLATES.map((tpl) => (
               <Rail key={tpl.type} label={tpl.label}>
                 <div
@@ -1019,7 +1020,7 @@ export function Animate({
               </button>
             </Rail>
           </div>
-          <div className="h-px w-8 bg-border" />
+          <div className="h-px w-8 bg-border max-md:h-8 max-md:w-px" />
           <Rail label="Animation templates">
             <button
               onClick={() => setTemplatesOpen((o) => !o)}
@@ -1164,8 +1165,8 @@ export function Animate({
           </div>
         </div>
 
-        {/* Right: properties */}
-        <aside className="w-60 shrink-0 overflow-y-auto border-l border-border p-3">
+        {/* Right: properties (a bottom sheet on mobile) */}
+        <aside className="w-60 shrink-0 overflow-y-auto border-l border-border p-3 max-md:h-[38%] max-md:w-full max-md:border-l-0 max-md:border-t">
           {!selected ? (
             <CanvasProperties
               bg={bg}
@@ -1185,9 +1186,9 @@ export function Animate({
           )}
         </aside>
 
-        {/* Far right: AI chat */}
+        {/* Far right: AI chat (a full overlay on mobile) */}
         {chatOpen && (
-          <aside className="flex w-72 shrink-0 flex-col border-l border-border">
+          <aside className="flex w-72 shrink-0 flex-col border-l border-border max-md:absolute max-md:inset-0 max-md:z-40 max-md:w-full max-md:border-l-0 max-md:bg-card">
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-sm font-semibold">Ask AI</span>
               <button
