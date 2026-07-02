@@ -9,7 +9,9 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). AI generation in the Animate editor needs a `MISTRAL_API_KEY` in `.env.local`.
+Open [http://localhost:3000](http://localhost:3000).
+
+> **AI chat is disabled by default.** The Animate editor's "Ask AI" feature is turned off (see [AI chat](#ai-chat--disabled-by-default) below for how to re-enable it safely).
 
 ## The site
 
@@ -48,10 +50,22 @@ A full frame-by-frame + keyframe motion editor that runs entirely in the browser
 - **Multi-track timeline**: layered tracks (like a layers panel — top row renders on top), each with its own frame sequence; shorter tracks hold their last frame. Two timeline views: **Frames** (canvas thumbnails per track) and **Time** (second ruler with a scrubbable playhead).
 - **Editor ergonomics**: undo/redo, copy/paste/duplicate shapes, arrow-key nudging, zoom-to-cursor + pan, onion skinning, frame context menu (copy/paste/paste-to-next-10/duplicate/delete), canvas background + grid settings.
 - **Templates**: one-click animation presets (Confetti, Ripple, Bounce, Pulse, Orbit) plus presets that recreate library components as editable frames (Text Shimmer, Dots Loader, Notification, Typewriter, Marquee).
-- **AI chat**: describe an animation ("a red ball bouncing") and a Mistral model plans objects + keyframes which the editor bakes into frames at your fps; keep chatting to refine ("make it red", "add 2 seconds"). Conversation-aware, with retries and sanitized output.
+- **AI chat** _(disabled by default — see below)_: describe an animation ("a red ball bouncing") and a Mistral model plans objects + keyframes which the editor bakes into frames at your fps; keep chatting to refine ("make it red", "add 2 seconds"). Conversation-aware, with retries and sanitized output.
 - **Export**: HD 1920×1080 WebM, all tracks composited.
 
 Keyboard shortcuts: `Space` play/pause · `[` `]` step frames · `Ctrl+Z/Y` undo/redo · `Ctrl+C/V/D` copy/paste/duplicate · arrows nudge (Shift = ×10) · `O` onion skin · `Del` delete · `Ctrl+scroll` zoom.
+
+### AI chat — disabled by default
+
+The "Ask AI" chat in the Animate editor is **turned off**. It's gated behind a single flag, `AI_ENABLED`, in `src/components/better/animate/animate.tsx`. While it's `false`, the toolbar button and the chat overlay are hidden; the rest of the editor works normally.
+
+It's off because the AI route (`src/app/api/animate/route.ts`) is a **public, unauthenticated proxy to Mistral with no rate limiting** — deployed as-is, anyone who finds the endpoint could call it in a loop and burn through the API key. Before turning it back on you should:
+
+1. **Add rate limiting to `/api/animate`** — per-IP throttling (e.g. Upstash Ratelimit, or an in-memory token bucket for a single instance).
+2. **Check the request `Origin`/`Referer`** against your own domain to block casual cross-site abuse.
+3. **Cap input size** — clamp `prompt` length and the `history` / `currentScene` payloads (the route currently only checks that `prompt` is a non-empty string).
+
+Once those are in place: set a `MISTRAL_API_KEY` in `.env.local`, flip `AI_ENABLED` to `true`, and the feature returns. The model is `mistral-small-latest` via the Vercel AI SDK (`generateObject`); the editor bakes the model's keyframe scene into real frames client-side in `animate/ai.ts` (all values sanitized and clamped).
 
 ## Project structure
 
@@ -89,3 +103,7 @@ Temporarily hidden components (above) are intentionally left out of `registry.js
 - `pnpm build` — production build
 - `pnpm lint` — ESLint (React compiler rules enabled)
 - `pnpm registry:build` — build the shadcn registry into `public/r/`
+
+## License
+
+[MIT](./LICENSE) — free to use, copy, modify, and distribute the components in your own projects.

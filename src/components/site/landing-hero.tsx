@@ -21,7 +21,7 @@ export function LandingHero() {
     target: ref,
     offset: ["start start", "end end"],
   })
-  const scale = useTransform(scrollYProgress, [0, 1], [1.08, 1])
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.3])
 
   return (
     <div

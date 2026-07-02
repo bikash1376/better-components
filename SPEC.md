@@ -4,6 +4,74 @@ Working notes for the next round of work on Better Components. Grouped by area,
 each with the problem, the intended change, and acceptance criteria. Priority:
 **P1** = broken/visible now, **P2** = feature gap, **P3** = larger effort.
 
+> **Status (2026-07-02):** items **#1–#8 below are all shipped.** They're kept
+> for reference. Current focus and newly shipped work are in
+> [Latest](#latest--since-the-round-above) directly below; open work is in
+> [Open / next](#open--next).
+
+---
+
+## Latest — since the round above
+
+Shipped after the #1–#8 round:
+
+- **New UI category** (badged "New"): **Static Button** (Apple-style pill, CVA,
+  no motion), **Infinite Canvas** (windowed pannable icon grid — only on-screen
+  tiles mount), **Paper** (textured surface). **Magnetic Card** (3D tilt + glare)
+  added to Mouse.
+- **Interactive playgrounds** across most components — a live preview + generated,
+  copyable code + a controls sidebar (`src/components/site/playground.tsx`, opted
+  in per component via `RegistryItem.playground`).
+- **Docs page** (`/docs`) — install via the `@bettercomp` namespace, the full
+  registry-JSON URL, or manual copy; nav links added on home + components pages.
+- **Syntax highlighting** — `prism-react-renderer` with a theme driven by
+  `--code-*` CSS vars so one theme adapts to light/dark
+  (`src/components/site/code-block.tsx`), used in the code modal and playgrounds.
+- **Registry publishing** — `pnpm registry:build` inlines each component's source
+  into `public/r/*.json`; the registry URL is centralized in `src/lib/registry.ts`
+  (`NEXT_PUBLIC_REGISTRY_URL`), so every install command/doc derives from one place.
+- **Landing hero** — contained cover artwork with a gentle zoom-out on scroll.
+- **`hidden` flag** on registry items — keeps source + direct `/components/<slug>`
+  route but drops the item from gallery/search/sidebar and the published
+  `registry.json` (currently: Typewriter Text, the Shaders category, Icon Wheel).
+- **AI chat disabled** — see Open / next.
+- **MIT license** added (`LICENSE`); GitHub source links point at the real repo
+  (`bikash1376/better-components`).
+
+---
+
+## Open / next
+
+### A. AI chat — hardening before re-enabling (P1, security)
+
+**Problem:** The Animate editor's "Ask AI" feature is currently **disabled**
+(`AI_ENABLED = false` in `src/components/better/animate/animate.tsx`) because
+`/api/animate` is a **public, unauthenticated proxy to Mistral with no rate
+limiting** — deployed as-is, anyone could loop it and burn the API key.
+
+**Change (do all three before flipping `AI_ENABLED` back to `true`):**
+1. **Rate limit `/api/animate`** — per-IP throttle (Upstash Ratelimit, or an
+   in-memory token bucket for a single instance).
+2. **Origin/Referer check** — reject requests that don't come from our own domain.
+3. **Input caps** — clamp `prompt` length and the `history` / `currentScene`
+   payload sizes (the route currently only checks `prompt` is a non-empty string).
+
+**Files:** `src/app/api/animate/route.ts`, `src/components/better/animate/animate.tsx`.
+
+**Done when:** the endpoint is rate-limited + origin-checked + size-capped, and
+`AI_ENABLED` is `true` again with the chat working.
+
+### B. Smaller cleanups (P2/P3)
+
+- **Metadata / SEO:** `layout.tsx` title is `"Better Component"` (missing "s"),
+  no `openGraph` / `metadataBase` / OG image — social shares preview blank.
+- **Icon input sanitizing:** validate `iconName` (`/^[a-z0-9-]+$/`) and `fill`
+  (hex) before building the Phosphor CDN URL / SVG in
+  `src/components/better/animate/icons.tsx`.
+- **npm name:** `bettercomp` / `@bettercomp` is not yet reserved on npm; the
+  registry URL stays the Vercel deployment (`better-components-alpha.vercel.app`)
+  for now.
+
 ---
 
 ## 1. Text Shimmer — controls do nothing (P1, bug)

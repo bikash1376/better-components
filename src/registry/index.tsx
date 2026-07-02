@@ -30,9 +30,9 @@ import {
   ToastPoster,
 } from "@/components/better/icon-demos"
 
-/** Base URL of the GitHub repo that hosts the component source. Dummy for now. */
+/** Base URL of the GitHub repo that hosts the component source. */
 export const GITHUB_BASE =
-  "https://github.com/your-org/better-components/blob/main"
+  "https://github.com/bikash1376/better-components/blob/main"
 
 export const categories = [
   "Apps",

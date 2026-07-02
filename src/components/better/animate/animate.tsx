@@ -101,6 +101,13 @@ const MAX_HISTORY = 60
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 6
 
+// AI chat is disabled for now: the /api/animate route is a public, unauthed
+// proxy to Mistral with no rate limiting, so exposing it would let anyone burn
+// the API key. Flip this to true once a rate limiter + origin check are in
+// place on the route (see README → "AI chat"). This hides the toolbar button
+// and the chat overlay; the sendMessage plumbing is left intact.
+const AI_ENABLED = false
+
 // ─── Component ───────────────────────────────────────────────────────────────
 export function Animate({
   className,
@@ -976,14 +983,16 @@ export function Animate({
           >
             {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
           </HeaderBtn>
-          <HeaderBtn
-            onClick={() => setChatOpen((c) => !c)}
-            title="Ask AI"
-            active={chatOpen}
-            bordered
-          >
-            <MessageSquare className="size-4" />
-          </HeaderBtn>
+          {AI_ENABLED && (
+            <HeaderBtn
+              onClick={() => setChatOpen((c) => !c)}
+              title="Ask AI"
+              active={chatOpen}
+              bordered
+            >
+              <MessageSquare className="size-4" />
+            </HeaderBtn>
+          )}
           <button
             onClick={exportVideo}
             disabled={isExporting}
@@ -1187,7 +1196,7 @@ export function Animate({
         </aside>
 
         {/* Far right: AI chat (a full overlay on mobile) */}
-        {chatOpen && (
+        {AI_ENABLED && chatOpen && (
           <aside className="flex w-72 shrink-0 flex-col border-l border-border max-md:absolute max-md:inset-0 max-md:z-40 max-md:w-full max-md:border-l-0 max-md:bg-card">
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-sm font-semibold">Ask AI</span>
