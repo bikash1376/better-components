@@ -30,11 +30,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif&family=Playfair+Display:wght@400;500;600;700&family=Pinyon+Script&display=swap"
-      />
       <body className="min-h-full flex flex-col">
+        {/* Loaded here (not as a raw <html> child) with a precedence so React 19
+            hoists + dedupes it into <head>. These families are referenced by
+            literal name inside the Animate editor, so next/font isn't a fit. */}
+        <link
+          rel="stylesheet"
+          precedence="default"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif&family=Playfair+Display:wght@400;500;600;700&family=Pinyon+Script&display=swap"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

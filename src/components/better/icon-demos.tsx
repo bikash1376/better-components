@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "motion/react"
+import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
 
 import { useIcons } from "@/components/site/icons"
 import { IconTooltip } from "@/components/better/icon-tooltip"
@@ -26,9 +26,12 @@ export function NotificationDemo() {
   const { icons } = useIcons()
   return (
     <NotificationCard
-      icon={<icons.bell className="size-4" />}
-      title="New notification"
+      icon={<icons.star className="size-4" />}
+      title="New star"
       message="Someone starred your component."
+      time="now"
+      accent="amber"
+      action={{ label: "View repo" }}
       closeIcon={<icons.close className="size-4" />}
     />
   )
@@ -77,76 +80,62 @@ export function IconWheelPoster() {
 /* Dynamic Island                                                    */
 /* ---------------------------------------------------------------- */
 
-const ISLAND_STATES = ["idle", "music", "call", "notify"] as const
-
-function EqualizerBars() {
-  return (
-    <div className="flex h-4 items-end gap-0.5">
-      {[0, 1, 2, 3].map((i) => (
-        <motion.span
-          key={i}
-          className="w-1 rounded-full bg-lime-400"
-          animate={{ height: ["30%", "100%", "45%"] }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            repeatType: "mirror",
-            delay: i * 0.12,
-          }}
-        />
-      ))}
-    </div>
-  )
+/** A call scenario: compact pill and the expanded accept/decline card. */
+export function IslandCall({ icons }: { icons: ReturnType<typeof useIcons>["icons"] }) {
+  return {
+    compact: (
+      <div className="flex items-center gap-2.5 px-1">
+        <span className="flex size-6 items-center justify-center rounded-full bg-green-500">
+          <Phone weight="fill" className="size-3.5" />
+        </span>
+        <span className="text-sm font-medium">Aanya</span>
+        <span className="text-xs text-white/50">mobile</span>
+      </div>
+    ),
+    expanded: (
+      <div className="flex w-60 flex-col gap-3.5">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
+            <icons.user className="size-5" />
+          </span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-medium">Aanya Sharma</span>
+            <span className="text-xs text-white/50">mobile · calling…</span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-red-500 py-2 text-sm font-medium">
+            <PhoneDisconnect weight="fill" className="size-4" />
+            Decline
+          </button>
+          <button className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-green-500 py-2 text-sm font-medium">
+            <Phone weight="fill" className="size-4" />
+            Accept
+          </button>
+        </div>
+      </div>
+    ),
+  }
 }
 
 export function DynamicIslandDemo() {
   const { icons } = useIcons()
-  const [i, setI] = useState(0)
-  const state = ISLAND_STATES[i]
+  const [open, setOpen] = useState(false)
+  const call = IslandCall({ icons })
 
+  // Auto-toggle so the gallery card animates; still clickable to expand.
   useEffect(() => {
-    const id = setInterval(
-      () => setI((v) => (v + 1) % ISLAND_STATES.length),
-      2600
-    )
+    const id = setInterval(() => setOpen((o) => !o), 2600)
     return () => clearInterval(id)
   }, [])
 
-  const next = () => setI((v) => (v + 1) % ISLAND_STATES.length)
-
   return (
-    <DynamicIsland state={state} onClick={next} className="px-4 py-2.5">
-      {state === "idle" && <span className="size-2 rounded-full bg-white/40" />}
-      {state === "music" && (
-        <div className="flex items-center gap-3 px-1">
-          <icons.star className="size-4 text-lime-400" />
-          <span className="text-sm font-medium">Now Playing</span>
-          <EqualizerBars />
-        </div>
-      )}
-      {state === "call" && (
-        <div className="flex items-center gap-3 px-1">
-          <span className="flex size-8 items-center justify-center rounded-full bg-white/10">
-            <icons.user className="size-4" />
-          </span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Aanya</span>
-            <span className="text-xs text-white/50">calling…</span>
-          </div>
-          <span className="ml-1 size-6 rounded-full bg-green-500" />
-          <span className="size-6 rounded-full bg-red-500" />
-        </div>
-      )}
-      {state === "notify" && (
-        <div className="flex items-center gap-3 px-1">
-          <icons.bell className="size-4 text-amber-300" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Reminder</span>
-            <span className="text-xs text-white/50">Standup in 5 min</span>
-          </div>
-        </div>
-      )}
-    </DynamicIsland>
+    <DynamicIsland
+      open={open}
+      onOpenChange={setOpen}
+      compact={call.compact}
+      expanded={call.expanded}
+    />
   )
 }
 

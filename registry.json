@@ -64,6 +64,21 @@
       ]
     },
     {
+      "name": "paper",
+      "type": "registry:component",
+      "title": "Paper",
+      "description": "A textured paper surface — fractal-noise grain, soft light, and emboss.",
+      "dependencies": [],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/paper.tsx",
+          "type": "registry:component",
+          "target": "components/better/paper.tsx"
+        }
+      ]
+    },
+    {
       "name": "magnetic-button",
       "type": "registry:component",
       "title": "Magnetic Button",

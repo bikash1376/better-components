@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "paper",
+  "title": "Paper",
+  "description": "A textured paper surface — fractal-noise grain, soft light, and emboss.",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/components/better/paper.tsx",
+      "content": "\"use client\"\n\nimport { useId, type ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ninterface PaperProps {\n  children?: ReactNode\n  className?: string\n  /** Base paper colour. */\n  color?: string\n  /** Grain intensity, 0–1. */\n  noise?: number\n  /** Depth of the emboss, light, and drop shadow, 0–1. */\n  strength?: number\n  /** Corner radius in px. */\n  radius?: number\n}\n\n/**\n * Paper — a textured paper surface: a fractal-noise grain over a warm base with\n * a soft top light, embossed edges, and a lift shadow. Tune the `noise` grain\n * and the `strength` of the depth. Everything renders on the GPU-friendly SVG\n * filter; no images.\n * Category: UI. Part of the Better Component library.\n */\nexport function Paper({\n  children,\n  className,\n  color = \"#f4efe4\",\n  noise = 0.4,\n  strength = 0.6,\n  radius = 16,\n}: PaperProps) {\n  const id = useId()\n\n  return (\n    <div\n      className={cn(\"relative overflow-hidden\", className)}\n      style={{\n        background: color,\n        borderRadius: radius,\n        boxShadow: [\n          `inset 0 1px 1px rgba(255,255,255,${0.6 * strength})`,\n          `inset 0 -1px 2px rgba(0,0,0,${0.14 * strength})`,\n          `0 ${10 * strength}px ${28 * strength}px -10px rgba(0,0,0,${0.3 * strength})`,\n        ].join(\", \"),\n      }}\n    >\n      <svg\n        aria-hidden\n        className=\"pointer-events-none absolute inset-0 size-full mix-blend-multiply\"\n        style={{ opacity: noise }}\n      >\n        <filter id={`paper-${id}`}>\n          <feTurbulence\n            type=\"fractalNoise\"\n            baseFrequency=\"0.9\"\n            numOctaves=\"2\"\n            stitchTiles=\"stitch\"\n            result=\"n\"\n          />\n          <feColorMatrix in=\"n\" type=\"saturate\" values=\"0\" />\n        </filter>\n        <rect width=\"100%\" height=\"100%\" filter={`url(#paper-${id})`} />\n      </svg>\n\n      <div\n        aria-hidden\n        className=\"pointer-events-none absolute inset-0\"\n        style={{\n          background: `radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,${\n            0.4 * strength\n          }), transparent 60%)`,\n        }}\n      />\n\n      <div className=\"relative\">{children}</div>\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/better/paper.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils"
 
 interface MagneticCardProps {
-  children: ReactNode
+  children?: ReactNode
   className?: string
   /** Max tilt in degrees at the card's edges. */
   tilt?: number
@@ -20,6 +20,12 @@ interface MagneticCardProps {
   drift?: number
   /** Show the moving glare highlight. */
   glare?: boolean
+  /** Optional image URL shown as a banner (not an upload — just a src to display). */
+  image?: string
+  /** Title for the built-in card layout. Provide this (or `image`) to use it instead of children. */
+  title?: string
+  /** Subtitle under the title. */
+  subtitle?: string
 }
 
 /**
@@ -33,7 +39,11 @@ export function MagneticCard({
   tilt = 12,
   drift = 10,
   glare = true,
+  image,
+  title,
+  subtitle,
 }: MagneticCardProps) {
+  const useBuiltIn = title != null || subtitle != null || image != null
   const ref = useRef<HTMLDivElement>(null)
 
   // -0.5..0.5 relative to the card centre.
@@ -83,7 +93,30 @@ export function MagneticCard({
           className
         )}
       >
-        <div style={{ transform: "translateZ(40px)" }}>{children}</div>
+        <div style={{ transform: "translateZ(40px)" }}>
+          {useBuiltIn ? (
+            <div className="flex flex-col gap-3">
+              {image && (
+                <div
+                  className="h-32 w-full rounded-xl bg-muted bg-cover bg-center"
+                  style={{ backgroundImage: `url(${image})` }}
+                />
+              )}
+              {(title || subtitle) && (
+                <div>
+                  {title && <h3 className="text-lg font-medium">{title}</h3>}
+                  {subtitle && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            children
+          )}
+        </div>
         {glare && (
           <motion.div
             aria-hidden

@@ -7,6 +7,7 @@ import { DotsLoader } from "@/components/better/dots-loader"
 import { MagneticButton } from "@/components/better/magnetic-button"
 import { MagneticCard } from "@/components/better/magnetic-card"
 import { StaticButton } from "@/components/better/static-button"
+import { Paper } from "@/components/better/paper"
 import { TypewriterText } from "@/components/better/typewriter-text"
 import { NumberTicker } from "@/components/better/number-ticker"
 import { Marquee } from "@/components/better/marquee"
@@ -78,6 +79,7 @@ export const components: RegistryItem[] = [
     name: "Text Shimmer",
     category: "Typography",
     description: "An animated gradient sweep across text.",
+    playground: true,
     sourcePath: "src/components/better/text-shimmer.tsx",
     install: "npx shadcn@latest add @bettercomp/text-shimmer",
     usage: `import { TextShimmer } from "@/components/better/text-shimmer"
@@ -105,6 +107,7 @@ export function Example() {
     name: "Stop Motion",
     category: "Stop Motion",
     description: "Choppy, hand-animated stop-motion 'boil' for any content.",
+    playground: true,
     sourcePath: "src/components/better/stop-motion.tsx",
     install: "npx shadcn@latest add @bettercomp/stop-motion",
     usage: `import { StopMotion } from "@/components/better/stop-motion"
@@ -128,6 +131,7 @@ export function Example() {
     name: "Flipbook",
     category: "Stop Motion",
     description: "Snaps between children like flipbook pages — no easing, no fades.",
+    playground: true,
     sourcePath: "src/components/better/flipbook.tsx",
     install: "npx shadcn@latest add @bettercomp/flipbook",
     usage: `import { Flipbook } from "@/components/better/flipbook"
@@ -155,6 +159,7 @@ export function Example() {
     name: "Sketch Border",
     category: "Stop Motion",
     description: "A hand-drawn border that boils — redrawn a few times a second.",
+    playground: true,
     sourcePath: "src/components/better/sketch-border.tsx",
     install: "npx shadcn@latest add @bettercomp/sketch-border",
     usage: `import { SketchBorder } from "@/components/better/sketch-border"
@@ -220,6 +225,7 @@ export function Example() {
     name: "Number Ticker",
     category: "Typography",
     description: "A number that springs up to its value when scrolled into view.",
+    playground: true,
     sourcePath: "src/components/better/number-ticker.tsx",
     install: "npx shadcn@latest add @bettercomp/number-ticker",
     usage: `import { NumberTicker } from "@/components/better/number-ticker"
@@ -248,6 +254,7 @@ export function Example() {
     name: "Dots Loader",
     category: "Loaders",
     description: "Three dots bouncing in sequence.",
+    playground: true,
     sourcePath: "src/components/better/dots-loader.tsx",
     install: "npx shadcn@latest add @bettercomp/dots-loader",
     usage: `import { DotsLoader } from "@/components/better/dots-loader"
@@ -351,6 +358,7 @@ export function Example() {
     name: "Marquee",
     category: "Carousel",
     description: "An infinite, seamless horizontal scroller with edge fading.",
+    playground: true,
     sourcePath: "src/components/better/marquee.tsx",
     install: "npx shadcn@latest add @bettercomp/marquee",
     usage: `import { Marquee } from "@/components/better/marquee"
@@ -394,6 +402,7 @@ export function Example() {
     name: "Magnetic Button",
     category: "Mouse",
     description: "A button that pulls toward the cursor on hover.",
+    playground: true,
     sourcePath: "src/components/better/magnetic-button.tsx",
     install: "npx shadcn@latest add @bettercomp/magnetic-button",
     usage: `import { MagneticButton } from "@/components/better/magnetic-button"
@@ -451,7 +460,9 @@ export function Example() {
     slug: "icon-tooltip",
     name: "Icon Tooltip",
     category: "Mouse",
-    description: "An icon button that reveals a tooltip on hover.",
+    playground: true,
+    description:
+      "An icon button that reveals a tooltip — choose the side and delay.",
     sourcePath: "src/components/better/icon-tooltip.tsx",
     install: "npx shadcn@latest add @bettercomp/icon-tooltip",
     usage: `import { IconTooltip } from "@/components/better/icon-tooltip"
@@ -459,9 +470,12 @@ import { Star } from "lucide-react"
 
 export function Example() {
   return (
-    <IconTooltip label="Favorite">
-      <Star className="size-5" />
-    </IconTooltip>
+    <IconTooltip
+      icon={<Star className="size-5" />}
+      label="Favorite"
+      side="top"
+      delay={150}
+    />
   )
 }`,
     Demo: IconTooltipDemo,
@@ -471,16 +485,24 @@ export function Example() {
     slug: "notification-card",
     name: "Notification Card",
     category: "Mouse",
-    description: "A toast-style notification with a leading icon.",
+    playground: true,
+    description:
+      "A springy, physics-flavoured toast with an accent icon and action.",
     sourcePath: "src/components/better/notification-card.tsx",
     install: "npx shadcn@latest add @bettercomp/notification-card",
     usage: `import { NotificationCard } from "@/components/better/notification-card"
+import { Star, X } from "lucide-react"
 
 export function Example() {
   return (
     <NotificationCard
-      title="Payment received"
-      description="Invoice #1042 · just now"
+      icon={<Star className="size-4" />}
+      title="New star"
+      message="Someone starred your component."
+      time="now"
+      accent="amber"
+      action={{ label: "View repo" }}
+      closeIcon={<X className="size-4" />}
     />
   )
 }`,
@@ -588,26 +610,28 @@ export function Example() {
     category: "UI",
     playground: true,
     description:
-      "An iPhone-style pill that fluidly resizes and morphs between states.",
+      "An iPhone-style pill that taps open from a compact pill into a card.",
     sourcePath: "src/components/better/dynamic-island.tsx",
     install: "npx shadcn@latest add @bettercomp/dynamic-island",
-    usage: `import { useState } from "react"
-import { DynamicIsland } from "@/components/better/dynamic-island"
+    usage: `import { DynamicIsland } from "@/components/better/dynamic-island"
+import { Phone, PhoneDisconnect } from "@phosphor-icons/react"
 
 export function Example() {
-  const [open, setOpen] = useState(false)
+  // Click the pill to expand into the card; pass your own compact/expanded.
   return (
     <DynamicIsland
-      state={open ? "open" : "idle"}
-      onClick={() => setOpen((v) => !v)}
-      className="px-4 py-2.5"
-    >
-      {open ? (
-        <span className="px-2 text-sm font-medium">Now Playing — Aura</span>
-      ) : (
-        <span className="size-2 rounded-full bg-white/40" />
-      )}
-    </DynamicIsland>
+      compact={<span className="px-1 text-sm font-medium">Aanya</span>}
+      expanded={
+        <div className="flex w-60 gap-2">
+          <button className="flex-1 rounded-full bg-red-500 py-2 text-sm">
+            Decline
+          </button>
+          <button className="flex-1 rounded-full bg-green-500 py-2 text-sm">
+            Accept
+          </button>
+        </div>
+      }
+    />
   )
 }`,
     Demo: DynamicIslandDemo,
@@ -638,6 +662,39 @@ export function Example() {
 }`,
     Demo: InfiniteCanvasDemo,
     Poster: InfiniteCanvasPoster,
+  },
+  {
+    slug: "paper",
+    name: "Paper",
+    category: "UI",
+    playground: true,
+    description:
+      "A textured paper surface — fractal-noise grain, soft light, and emboss.",
+    sourcePath: "src/components/better/paper.tsx",
+    install: "npx shadcn@latest add @bettercomp/paper",
+    usage: `import { Paper } from "@/components/better/paper"
+
+export function Example() {
+  return (
+    <Paper noise={0.4} strength={0.6} className="h-48 w-72">
+      <div className="p-6 text-neutral-800">Paper</div>
+    </Paper>
+  )
+}`,
+    Demo: () => (
+      <Paper
+        noise={0.4}
+        strength={0.6}
+        className="flex h-44 w-64 items-center justify-center"
+      >
+        <span className="text-xl font-medium text-neutral-800">Paper</span>
+      </Paper>
+    ),
+    Poster: () => (
+      <div className="flex h-44 w-64 items-center justify-center rounded-2xl bg-[#f4efe4] shadow-lg">
+        <span className="text-xl font-medium text-neutral-800">Paper</span>
+      </div>
+    ),
   },
 ]
 
