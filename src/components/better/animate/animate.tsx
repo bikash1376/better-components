@@ -19,6 +19,7 @@ import {
   Send,
   Shapes,
   Sparkles,
+  Spline,
   Square,
   Star,
   Triangle as TriangleIcon,
@@ -48,6 +49,7 @@ import {
   CH,
   CW,
   FRAME_RATES,
+  TWEEN_KEYS,
   cloneShapes,
   createShape,
   emptyFrame,
@@ -55,6 +57,7 @@ import {
   makeTrack,
   trackFrameAt,
   tracksLength,
+  tweenFrames,
   uid,
 } from "./types"
 
@@ -134,6 +137,10 @@ export function Animate({
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [onion, setOnion] = useState(false)
+  // Video-editor tweening: when on, moving/resizing a shape auto-fills the
+  // in-between frames back to its previous keyframe. Off by default so the
+  // frame-by-frame (stop-motion) workflow is unchanged until you opt in.
+  const [tween, setTween] = useState(false)
   const [grid, setGrid] = useState(true)
   const [bg, setBg] = useState("#ffffff")
   const [timelineTab, setTimelineTab] = useState<TimelineTab>("frames")
@@ -168,6 +175,7 @@ export function Animate({
   const framesRef = useRef<Frame[]>(tracks[0].frames)
   const currentRef = useRef(current)
   const zoomRef = useRef(zoom)
+  const tweenRef = useRef(tween)
   useEffect(() => {
     tracksRef.current = tracks
     framesRef.current =
@@ -182,6 +190,9 @@ export function Animate({
   useEffect(() => {
     zoomRef.current = zoom
   }, [zoom])
+  useEffect(() => {
+    tweenRef.current = tween
+  }, [tween])
 
   /** Update the active track's frames (accepts a value or an updater). */
   const setFrames = useCallback(
@@ -336,13 +347,23 @@ export function Animate({
     [setFrames]
   )
 
+  /** Fill the in-between frames for a shape after a geometry edit (tween mode). */
+  const commitTween = useCallback(
+    (id: string) => {
+      setFrames((f) => tweenFrames(f, id, currentRef.current))
+    },
+    [setFrames]
+  )
+
   const updateShape = useCallback(
     (patch: Partial<Shape>) => {
       if (!selectedId) return
       snapshot(`prop:${selectedId}:${Object.keys(patch).join(",")}`)
       patchShape(selectedId, patch)
+      if (tweenRef.current && TWEEN_KEYS.some((k) => k in patch))
+        commitTween(selectedId)
     },
-    [patchShape, selectedId, snapshot]
+    [patchShape, selectedId, snapshot, commitTween]
   )
 
   const deleteShape = useCallback(() => {
@@ -424,8 +445,9 @@ export function Animate({
       if (!sh) return
       snapshot(`nudge:${selectedId}`)
       patchShape(selectedId, { x: sh.x + dx, y: sh.y + dy })
+      if (tweenRef.current) commitTween(selectedId)
     },
-    [selectedId, patchShape, snapshot, activeFrameNow]
+    [selectedId, patchShape, snapshot, activeFrameNow, commitTween]
   )
 
   // ── Frame ops (target a track; default = active) ──────────────────────────
@@ -682,9 +704,14 @@ export function Animate({
       if (!moveRaf.current) moveRaf.current = requestAnimationFrame(apply)
     }
     function up() {
+      const d = dragState.current
+      const r = resizeState.current
+      // Only a real move/resize (not a bare click) triggers a tween fill.
+      const movedId = d?.moved ? d.id : r?.moved ? r.id : null
       dragState.current = null
       resizeState.current = null
       pendingMove.current = null
+      if (movedId && tweenRef.current) commitTween(movedId)
     }
     window.addEventListener("pointermove", move)
     window.addEventListener("pointerup", up)
@@ -693,7 +720,7 @@ export function Animate({
       window.removeEventListener("pointerup", up)
       if (moveRaf.current) cancelAnimationFrame(moveRaf.current)
     }
-  }, [patchShape, toLocal, snapshot])
+  }, [patchShape, toLocal, snapshot, commitTween])
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -975,6 +1002,14 @@ export function Animate({
             bordered
           >
             <Layers className="size-4" />
+          </HeaderBtn>
+          <HeaderBtn
+            onClick={() => setTween((t) => !t)}
+            title="Tween — auto-fill motion between keyframes"
+            active={tween}
+            bordered
+          >
+            <Spline className="size-4" />
           </HeaderBtn>
           <HeaderBtn
             onClick={() => setIsPlaying((p) => !p)}

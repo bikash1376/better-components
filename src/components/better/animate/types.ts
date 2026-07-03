@@ -150,8 +150,14 @@ export const fontCss = (label?: string) =>
 
 export const uid = () => Math.random().toString(36).slice(2, 9)
 
-export const cloneShapes = (shapes: Shape[]) =>
-  shapes.map((s) => ({ ...s, id: uid() }))
+/**
+ * Copy a frame's shapes for propagation into another frame. Ids are kept stable
+ * so "the same" shape keeps one identity across frames — that's what lets
+ * `tweenFrames` match a shape between its keyframes. Only one frame per track
+ * renders at a time, so shared ids across frames never collide, and every edit
+ * op (patch/delete/reorder) is scoped to the current frame index anyway.
+ */
+export const cloneShapes = (shapes: Shape[]) => shapes.map((s) => ({ ...s }))
 
 export const emptyFrame = (): Frame => ({ id: uid(), shapes: [] })
 
@@ -168,6 +174,67 @@ export const trackFrameAt = (t: Track, i: number): Frame =>
 
 export const tracksLength = (tracks: Track[]) =>
   Math.max(1, ...tracks.map((t) => t.frames.length))
+
+/** Numeric shape props tweened between keyframes (position, size, rotation, opacity). */
+export const TWEEN_KEYS = ["x", "y", "w", "h", "rotation", "opacity"] as const
+export type TweenKey = (typeof TWEEN_KEYS)[number]
+
+/**
+ * Video-editor-style tweening. After a shape (matched by `id`) is moved,
+ * resized or rotated on frame `current`, fill in the motion: interpolate every
+ * frame between it and the nearest earlier *keyframe* — a frame where the shape
+ * first appears or where one of its `TWEEN_KEYS` changes from the frame before.
+ * Frames before that keyframe and after `current` are left untouched, so only
+ * the last edited segment re-tweens. Returns a new `Frame[]` (or the same array
+ * if there's nothing to fill).
+ */
+export function tweenFrames(
+  frames: Frame[],
+  id: string,
+  current: number
+): Frame[] {
+  const n = Math.min(current, frames.length - 1)
+  if (n <= 0) return frames
+  const at = (i: number) => frames[i].shapes.find((s) => s.id === id)
+  const end = at(n)
+  if (!end) return frames
+
+  // Walk back to the nearest keyframe `a` (appearance or transform change point).
+  let a = 0
+  for (let i = n - 1; i >= 1; i--) {
+    const cur = at(i)
+    if (!cur) {
+      a = i + 1 // shape absent here → its current run starts on the next frame
+      break
+    }
+    const prev = at(i - 1)
+    if (!prev) {
+      a = i // shape appears at i
+      break
+    }
+    if (TWEEN_KEYS.some((k) => cur[k] !== prev[k])) {
+      a = i // transform change point
+      break
+    }
+  }
+  if (a >= n) return frames // no gap to fill
+  const start = at(a)
+  if (!start) return frames
+
+  return frames.map((fr, i) => {
+    if (i <= a || i >= n) return fr
+    const t = (i - a) / (n - a)
+    return {
+      ...fr,
+      shapes: fr.shapes.map((s) => {
+        if (s.id !== id) return s
+        const next = { ...s }
+        for (const k of TWEEN_KEYS) next[k] = start[k] + (end[k] - start[k]) * t
+        return next
+      }),
+    }
+  })
+}
 
 export function makeShape(p: Partial<Shape> & { type: ShapeType }): Shape {
   return {
