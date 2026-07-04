@@ -302,6 +302,50 @@ export function tweenFrames(
 }
 
 /**
+ * Apply a keyframe edit to shape `id` at frame `current`, filling **both**
+ * directions like a video editor:
+ *  - backward: tween from the previous keyframe up to `current`;
+ *  - forward: if there's a later keyframe, tween across to it; otherwise the
+ *    value **holds** (every following frame takes the new value) so the shape
+ *    doesn't snap back to its old pose after the edited frame.
+ */
+export function applyKeyframe(
+  frames: Frame[],
+  id: string,
+  current: number
+): Frame[] {
+  const n = Math.min(current, frames.length - 1)
+  if (n < 0) return frames
+  const held = frames[n].shapes.find((s) => s.id === id)
+  if (!held) return frames
+
+  // Backward: fill prevKeyframe..n.
+  const out = tweenFrames(frames, id, n)
+
+  // Find the next keyframe after n (stop if the shape's run ends first).
+  let nextKf = -1
+  for (let i = n + 1; i < out.length; i++) {
+    const sh = out[i].shapes.find((s) => s.id === id)
+    if (!sh) break
+    if (sh.key) {
+      nextKf = i
+      break
+    }
+  }
+
+  if (nextKf >= 0) return tweenFrames(out, id, nextKf) // forward: tween n..nextKf
+  // No later keyframe → hold the new value forward to the end of the run.
+  return out.map((fr, i) => {
+    if (i <= n) return fr
+    if (!fr.shapes.some((s) => s.id === id)) return fr
+    return {
+      ...fr,
+      shapes: fr.shapes.map((s) => (s.id === id ? { ...held, key: false } : s)),
+    }
+  })
+}
+
+/**
  * Tween the document background colour between keyframes, the same way shapes
  * tween. After `bgs[current]` is set, interpolate every entry back to the
  * nearest earlier background keyframe. Returns a new array.

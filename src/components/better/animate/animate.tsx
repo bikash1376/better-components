@@ -54,6 +54,7 @@ import {
   FRAME_RATES,
   MAX_FRAMES,
   ANIM_KEYS,
+  applyKeyframe,
   bgAt,
   cloneShapes,
   createShape,
@@ -371,10 +372,14 @@ export function Animate({
     [setFrames]
   )
 
-  /** Auto-keyframe: fill the in-between frames for a shape after any animatable edit. */
+  /**
+   * Auto-keyframe after any animatable edit: tween the segment before the
+   * current frame, and forward-fill after it (tween to the next keyframe, or
+   * hold the new value) so the shape doesn't snap back past the edited frame.
+   */
   const commitTween = useCallback(
     (id: string) => {
-      setFrames((f) => tweenFrames(f, id, currentRef.current))
+      setFrames((f) => applyKeyframe(f, id, currentRef.current))
     },
     [setFrames]
   )
