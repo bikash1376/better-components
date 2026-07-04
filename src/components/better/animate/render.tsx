@@ -12,6 +12,7 @@ import {
   heartSvgPath,
   hexagonPoints,
   noiseUri,
+  pointsToPath,
   shapeTransform,
   starPoints,
 } from "./types"
@@ -163,6 +164,27 @@ export const ShapeView = memo(function ShapeView({
   const handleDown = onSelect
     ? (e: React.PointerEvent) => onSelect(s.id, e)
     : undefined
+
+  if (s.type === "draw") {
+    return (
+      <svg
+        style={{ ...box, overflow: "visible" }}
+        viewBox={`0 0 ${Math.max(1, s.w)} ${Math.max(1, s.h)}`}
+        onPointerDown={handleDown}
+        className={ghost ? undefined : "cursor-move"}
+      >
+        <title>drawing</title>
+        <path
+          d={pointsToPath(s.points)}
+          fill="none"
+          stroke={s.fill}
+          strokeWidth={Math.max(1, s.strokeWidth || 3)}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
 
   if (SVG_TYPES.has(s.type)) {
     return (

@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { drawFrame } from "./export"
-import { type Frame, type Track, CH, CW, tracksLength } from "./types"
+import { type Frame, type Track, CH, CW, bgAt, tracksLength } from "./types"
 
 export type TimelineTab = "frames" | "time"
 
@@ -66,7 +66,7 @@ export function Timeline({
   activeTrack,
   current,
   fps,
-  bg,
+  bgs,
   tab,
   onTab,
   onSelect,
@@ -83,7 +83,7 @@ export function Timeline({
   activeTrack: number
   current: number
   fps: number
-  bg: string
+  bgs: string[]
   tab: TimelineTab
   onTab: (t: TimelineTab) => void
   onSelect: (i: number) => void
@@ -294,7 +294,7 @@ export function Timeline({
                     )}
                     title={`${t.name} · frame ${i + 1} — right-click for options`}
                   >
-                    <FrameThumb frame={f} bg={bg} />
+                    <FrameThumb frame={f} bg={bgAt(bgs, i)} />
                     <span
                       className={cn(
                         "absolute bottom-0 left-0 rounded-tr bg-background/85 px-1 font-mono text-[9px] tabular-nums",

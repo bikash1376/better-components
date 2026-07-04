@@ -5,6 +5,7 @@ import {
   type Track,
   CH,
   CW,
+  bgAt,
   effectsFilter,
   heartSegments,
   hexagonPoints,
@@ -176,6 +177,22 @@ export function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
     return
   }
 
+  if (s.type === "draw") {
+    const p = s.points
+    if (p.length >= 2) {
+      ctx.strokeStyle = s.fill
+      ctx.lineWidth = Math.max(1, s.strokeWidth || 3)
+      ctx.lineCap = "round"
+      ctx.lineJoin = "round"
+      ctx.beginPath()
+      ctx.moveTo(s.x + p[0], s.y + p[1])
+      for (let i = 2; i < p.length - 1; i += 2) ctx.lineTo(s.x + p[i], s.y + p[i + 1])
+      ctx.stroke()
+    }
+    ctx.restore()
+    return
+  }
+
   if (s.type === "arrow") {
     const t = Math.max(2, s.strokeWidth || 5)
     const head = Math.min(s.w * 0.35, s.h)
@@ -276,7 +293,7 @@ export function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
 }
 
 /** Render every composited frame to an offscreen canvas and record an HD webm. */
-export async function exportWebm(tracks: Track[], fps: number, bg: string) {
+export async function exportWebm(tracks: Track[], fps: number, bgs: string[]) {
   const allFrames = tracks.flatMap((t) => (t.visible ? t.frames : []))
   await preloadImages(allFrames)
   await preloadIcons(allFrames)
@@ -308,7 +325,7 @@ export async function exportWebm(tracks: Track[], fps: number, bg: string) {
   const total = tracksLength(tracks)
   const ticks = total > 1 ? total : Math.round(2 * fps)
   for (let i = 0; i < ticks; i++) {
-    drawComposite(ctx, tracks, i % total, CW, CH, bg)
+    drawComposite(ctx, tracks, i % total, CW, CH, bgAt(bgs, i % total))
     // Nudge the capture track so no frame is dropped by the wall-clock sampler.
     track.requestFrame?.()
     await new Promise((r) => setTimeout(r, 1000 / fps))
