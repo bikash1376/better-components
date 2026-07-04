@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   Circle,
+  Clock,
   Download,
   Heart,
   Hexagon,
@@ -14,12 +15,13 @@ import {
   Minus,
   MoveRight,
   Pause,
+  Pencil,
   Play,
+  Plus,
   Redo2,
   Send,
   Shapes,
   Sparkles,
-  Spline,
   Square,
   Star,
   Triangle as TriangleIcon,
@@ -49,14 +51,19 @@ import {
   CH,
   CW,
   FRAME_RATES,
-  TWEEN_KEYS,
+  MAX_FRAMES,
+  ANIM_KEYS,
+  bgAt,
   cloneShapes,
   createShape,
   emptyFrame,
   makeShape,
   makeTrack,
+  padBgs,
+  pointsToPath,
   trackFrameAt,
   tracksLength,
+  tweenBgs,
   tweenFrames,
   uid,
 } from "./types"
@@ -132,17 +139,21 @@ export function Animate({
   const [draft, setDraft] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
   const [menu, setMenu] = useState<{ x: number; y: number; frame: number } | null>(null)
-  const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [shapesOpen, setShapesOpen] = useState(false)
+  const [gotoOpen, setGotoOpen] = useState(false)
+  const [gotoMode, setGotoMode] = useState<"second" | "frame">("second")
+  const [gotoVal, setGotoVal] = useState("")
+  // "select" = drag/resize shapes; "draw" = freehand pencil on the canvas.
+  const [tool, setTool] = useState<"select" | "draw">("select")
+  // Live freehand stroke while drawing (flattened artboard points [x0,y0,…]).
+  const [drawPts, setDrawPts] = useState<number[] | null>(null)
   const [baseScale, setBaseScale] = useState(1)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [onion, setOnion] = useState(false)
-  // Video-editor tweening: when on, moving/resizing a shape auto-fills the
-  // in-between frames back to its previous keyframe. Off by default so the
-  // frame-by-frame (stop-motion) workflow is unchanged until you opt in.
-  const [tween, setTween] = useState(false)
   const [grid, setGrid] = useState(true)
-  const [bg, setBg] = useState("#ffffff")
+  // Per-frame (auto-keyframed) canvas background, indexed by global frame.
+  const [bgs, setBgs] = useState<string[]>(["#ffffff"])
   const [timelineTab, setTimelineTab] = useState<TimelineTab>("frames")
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
@@ -175,7 +186,9 @@ export function Animate({
   const framesRef = useRef<Frame[]>(tracks[0].frames)
   const currentRef = useRef(current)
   const zoomRef = useRef(zoom)
-  const tweenRef = useRef(tween)
+  const bgsRef = useRef(bgs)
+  const toolRef = useRef(tool)
+  const drawRef = useRef<number[] | null>(null)
   useEffect(() => {
     tracksRef.current = tracks
     framesRef.current =
@@ -191,8 +204,11 @@ export function Animate({
     zoomRef.current = zoom
   }, [zoom])
   useEffect(() => {
-    tweenRef.current = tween
-  }, [tween])
+    bgsRef.current = bgs
+  }, [bgs])
+  useEffect(() => {
+    toolRef.current = tool
+  }, [tool])
 
   /** Update the active track's frames (accepts a value or an updater). */
   const setFrames = useCallback(
@@ -216,15 +232,29 @@ export function Animate({
   const safeActive = Math.min(activeTrack, tracks.length - 1)
   const activeFrames = tracks[safeActive].frames
   const maxLen = tracksLength(tracks)
+  const curBg = bgAt(bgs, current)
   // Editing targets the active track's frame at the (clamped) global index.
   const editIndex = Math.min(current, activeFrames.length - 1)
   const frame = activeFrames[editIndex]
   const selected = frame?.shapes.find((s) => s.id === selectedId) ?? null
 
-  // ── History (undo/redo) — snapshots the whole track stack ────────────────
-  const past = useRef<Track[][]>([])
-  const future = useRef<Track[][]>([])
+  // ── History (undo/redo) — snapshots the track stack + per-frame background ──
+  type Snap = { tracks: Track[]; bgs: string[] }
+  const past = useRef<Snap[]>([])
+  const future = useRef<Snap[]>([])
   const lastSnap = useRef<{ tag: string; time: number }>({ tag: "", time: 0 })
+  const nowSnap = useCallback(
+    (): Snap => ({ tracks: tracksRef.current, bgs: bgsRef.current }),
+    []
+  )
+  const restore = useCallback((s: Snap) => {
+    setTracks(s.tracks)
+    setBgs(s.bgs)
+    setActiveTrack((a) => Math.min(a, s.tracks.length - 1))
+    setCurrent((c) => Math.min(c, tracksLength(s.tracks) - 1))
+    setSelectedId(null)
+    lastSnap.current = { tag: "", time: 0 }
+  }, [])
 
   const snapshot = useCallback((tag = "") => {
     const now = Date.now()
@@ -234,38 +264,30 @@ export function Animate({
       return
     }
     lastSnap.current = { tag, time: now }
-    past.current.push(tracksRef.current)
+    past.current.push(nowSnap())
     if (past.current.length > MAX_HISTORY) past.current.shift()
     future.current = []
     setCanUndo(true)
     setCanRedo(false)
-  }, [])
+  }, [nowSnap])
 
   const undo = useCallback(() => {
     const prev = past.current.pop()
     if (!prev) return
-    future.current.push(tracksRef.current)
-    setTracks(prev)
-    setActiveTrack((a) => Math.min(a, prev.length - 1))
-    setCurrent((c) => Math.min(c, tracksLength(prev) - 1))
-    setSelectedId(null)
-    lastSnap.current = { tag: "", time: 0 }
+    future.current.push(nowSnap())
+    restore(prev)
     setCanUndo(past.current.length > 0)
     setCanRedo(true)
-  }, [])
+  }, [nowSnap, restore])
 
   const redo = useCallback(() => {
     const next = future.current.pop()
     if (!next) return
-    past.current.push(tracksRef.current)
-    setTracks(next)
-    setActiveTrack((a) => Math.min(a, next.length - 1))
-    setCurrent((c) => Math.min(c, tracksLength(next) - 1))
-    setSelectedId(null)
-    lastSnap.current = { tag: "", time: 0 }
+    past.current.push(nowSnap())
+    restore(next)
     setCanUndo(true)
     setCanRedo(future.current.length > 0)
-  }, [])
+  }, [nowSnap, restore])
 
   // ── Fit the fixed artboard into the available stage space ────────────────
   useEffect(() => {
@@ -347,7 +369,7 @@ export function Animate({
     [setFrames]
   )
 
-  /** Fill the in-between frames for a shape after a geometry edit (tween mode). */
+  /** Auto-keyframe: fill the in-between frames for a shape after any animatable edit. */
   const commitTween = useCallback(
     (id: string) => {
       setFrames((f) => tweenFrames(f, id, currentRef.current))
@@ -355,13 +377,26 @@ export function Animate({
     [setFrames]
   )
 
+  /** Set the background on the current frame and tween it back to the last bg keyframe. */
+  const setBgAt = useCallback(
+    (color: string) => {
+      snapshot("bg")
+      setBgs((prev) => {
+        const next = padBgs(prev, tracksLength(tracksRef.current)).slice()
+        const idx = Math.min(currentRef.current, next.length - 1)
+        next[idx] = color
+        return tweenBgs(next, idx)
+      })
+    },
+    [snapshot]
+  )
+
   const updateShape = useCallback(
     (patch: Partial<Shape>) => {
       if (!selectedId) return
       snapshot(`prop:${selectedId}:${Object.keys(patch).join(",")}`)
       patchShape(selectedId, patch)
-      if (tweenRef.current && TWEEN_KEYS.some((k) => k in patch))
-        commitTween(selectedId)
+      if (ANIM_KEYS.some((k) => k in patch)) commitTween(selectedId)
     },
     [patchShape, selectedId, snapshot, commitTween]
   )
@@ -415,6 +450,64 @@ export function Animate({
     [snapshot, setFrames]
   )
 
+  /** Turn a freehand stroke (flattened artboard points) into a `draw` shape. */
+  const commitDraw = useCallback(
+    (pts: number[]) => {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      for (let i = 0; i < pts.length - 1; i += 2) {
+        minX = Math.min(minX, pts[i])
+        maxX = Math.max(maxX, pts[i])
+        minY = Math.min(minY, pts[i + 1])
+        maxY = Math.max(maxY, pts[i + 1])
+      }
+      const rel: number[] = []
+      for (let i = 0; i < pts.length - 1; i += 2)
+        rel.push(pts[i] - minX, pts[i + 1] - minY)
+      addShapeToCurrent(
+        makeShape({
+          type: "draw",
+          x: minX,
+          y: minY,
+          w: Math.max(1, maxX - minX),
+          h: Math.max(1, maxY - minY),
+          points: rel,
+          transparentFill: true,
+          fill: "#111827",
+          strokeWidth: 3,
+        })
+      )
+    },
+    [addShapeToCurrent]
+  )
+
+  /** Jump to a global frame index, materialising the active track up to it. */
+  const goTo = useCallback(
+    (targetIndex: number) => {
+      const idx = Math.max(0, Math.min(MAX_FRAMES - 1, Math.round(targetIndex)))
+      const at = activeTrackRef.current
+      const t = tracksRef.current[at]
+      if (idx > t.frames.length - 1) {
+        snapshot()
+        setTracks((ts) =>
+          ts.map((tr, i) => {
+            if (i !== at) return tr
+            const next = [...tr.frames]
+            while (next.length <= idx)
+              next.push({
+                id: uid(),
+                shapes: cloneShapes(next[next.length - 1].shapes),
+              })
+            return { ...tr, frames: next }
+          })
+        )
+      }
+      setCurrent(idx)
+      setSelectedId(null)
+      setGotoOpen(false)
+    },
+    [snapshot]
+  )
+
   /** The active track's frame at the (clamped) global index, read from refs. */
   const activeFrameNow = useCallback(() => {
     const f = framesRef.current
@@ -445,7 +538,7 @@ export function Animate({
       if (!sh) return
       snapshot(`nudge:${selectedId}`)
       patchShape(selectedId, { x: sh.x + dx, y: sh.y + dy })
-      if (tweenRef.current) commitTween(selectedId)
+      commitTween(selectedId)
     },
     [selectedId, patchShape, snapshot, activeFrameNow, commitTween]
   )
@@ -615,7 +708,7 @@ export function Animate({
     setFrames([...f.slice(0, cur + 1), ...clip, ...f.slice(cur + 1)])
     setCurrent(cur + 1)
     setSelectedId(null)
-    setTemplatesOpen(false)
+    setShapesOpen(false)
   }
 
   function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -651,7 +744,7 @@ export function Animate({
   // ── Drag-move + corner-resize (rAF-batched for smoothness) ────────────────
   const onShapePointerDown = useCallback(
     (id: string, e: React.PointerEvent) => {
-      if (isPlaying) return
+      if (isPlaying || toolRef.current === "draw") return
       setSelectedId(id)
       const sh = framesRef.current[currentRef.current]?.shapes.find(
         (s) => s.id === id
@@ -711,7 +804,7 @@ export function Animate({
       dragState.current = null
       resizeState.current = null
       pendingMove.current = null
-      if (movedId && tweenRef.current) commitTween(movedId)
+      if (movedId) commitTween(movedId)
     }
     window.addEventListener("pointermove", move)
     window.addEventListener("pointerup", up)
@@ -721,6 +814,38 @@ export function Animate({
       if (moveRaf.current) cancelAnimationFrame(moveRaf.current)
     }
   }, [patchShape, toLocal, snapshot, commitTween])
+
+  // ── Freehand pencil (draw tool): capture a stroke, bake it into a draw shape ─
+  useEffect(() => {
+    let raf = 0
+    const flush = () => {
+      raf = 0
+      if (drawRef.current) setDrawPts(drawRef.current.slice())
+    }
+    function move(e: PointerEvent) {
+      if (!drawRef.current) return
+      const { x, y } = toLocal(e.clientX, e.clientY)
+      drawRef.current.push(x, y)
+      if (!raf) raf = requestAnimationFrame(flush)
+    }
+    function up() {
+      const pts = drawRef.current
+      drawRef.current = null
+      if (raf) {
+        cancelAnimationFrame(raf)
+        raf = 0
+      }
+      setDrawPts(null)
+      if (pts && pts.length >= 4) commitDraw(pts)
+    }
+    window.addEventListener("pointermove", move)
+    window.addEventListener("pointerup", up)
+    return () => {
+      window.removeEventListener("pointermove", move)
+      window.removeEventListener("pointerup", up)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [toLocal, commitDraw])
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -774,7 +899,13 @@ export function Animate({
       if (e.key === "Escape") {
         setSelectedId(null)
         setMenu(null)
-        setTemplatesOpen(false)
+        setShapesOpen(false)
+        setGotoOpen(false)
+        setTool("select")
+        return
+      }
+      if (e.key.toLowerCase() === "b" && !mod) {
+        setTool((t) => (t === "draw" ? "select" : "draw"))
         return
       }
       if (e.key.startsWith("Arrow") && selectedId) {
@@ -830,7 +961,7 @@ export function Animate({
     setIsExporting(true)
     setIsPlaying(false)
     try {
-      await exportWebm(tracksRef.current, fps, bg)
+      await exportWebm(tracksRef.current, fps, bgsRef.current)
     } finally {
       setIsExporting(false)
     }
@@ -951,9 +1082,25 @@ export function Animate({
         </defs>
       </svg>
 
-      {/* Header: [history+zoom] [frame counter] [playback+export] */}
+      {/* Header: [insert/tools + history + zoom] [frame counter] [playback+export] */}
       <header className="grid grid-cols-3 items-center border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">
+          <HeaderBtn
+            onClick={() => setShapesOpen(true)}
+            title="Insert a shape or template"
+            bordered
+          >
+            <Plus className="size-4" />
+          </HeaderBtn>
+          <HeaderBtn
+            onClick={() => setTool((t) => (t === "draw" ? "select" : "draw"))}
+            title="Pencil — draw freehand (B)"
+            active={tool === "draw"}
+            bordered
+          >
+            <Pencil className="size-4" />
+          </HeaderBtn>
+          <div className="mx-1.5 h-5 w-px bg-border" />
           <HeaderBtn onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
             <Undo2 className="size-4" />
           </HeaderBtn>
@@ -1004,12 +1151,11 @@ export function Animate({
             <Layers className="size-4" />
           </HeaderBtn>
           <HeaderBtn
-            onClick={() => setTween((t) => !t)}
-            title="Tween — auto-fill motion between keyframes"
-            active={tween}
+            onClick={() => setGotoOpen(true)}
+            title="Go to a second or frame"
             bordered
           >
-            <Spline className="size-4" />
+            <Clock className="size-4" />
           </HeaderBtn>
           <HeaderBtn
             onClick={() => setIsPlaying((p) => !p)}
@@ -1040,87 +1186,15 @@ export function Animate({
       </header>
 
       <div className="flex min-h-0 flex-1 max-md:flex-col">
-        {/* Left: shape templates + upload + animation templates
-            (becomes a horizontal scrolling tool strip on mobile) */}
-        <aside className="relative flex w-[74px] shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-border p-2 max-md:w-full max-md:flex-row max-md:items-center max-md:overflow-x-auto max-md:overflow-y-hidden max-md:border-b max-md:border-r-0">
-          <div className="grid grid-cols-2 gap-1.5 max-md:flex max-md:flex-nowrap">
-            {SHAPE_TEMPLATES.map((tpl) => (
-              <Rail key={tpl.type} label={tpl.label}>
-                <div
-                  draggable
-                  onDragStart={(e) => e.dataTransfer.setData("shape", tpl.type)}
-                  className="flex size-8 cursor-grab items-center justify-center rounded-md border border-border bg-background text-muted-foreground active:cursor-grabbing hover:border-foreground/30 hover:text-foreground"
-                >
-                  {tpl.icon}
-                </div>
-              </Rail>
-            ))}
-            <Rail label="Upload image / logo">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-              >
-                <ImagePlus className="size-4" />
-              </button>
-            </Rail>
-          </div>
-          <div className="h-px w-8 bg-border max-md:h-8 max-md:w-px" />
-          <Rail label="Animation templates">
-            <button
-              onClick={() => setTemplatesOpen((o) => !o)}
-              className={cn(
-                "flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
-                templatesOpen && "border-foreground/50 text-foreground"
-              )}
-            >
-              <LayoutTemplate className="size-4" />
-            </button>
-          </Rail>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={onUpload}
-            className="hidden"
-          />
-        </aside>
-
-        {/* Templates flyout */}
-        {templatesOpen && (
-          <div className="absolute bottom-20 left-[80px] top-14 z-40 w-64 overflow-y-auto rounded-xl border border-border bg-popover p-2 shadow-xl">
-            <div className="mb-1 flex items-center justify-between px-1.5 pt-1">
-              <span className="text-xs font-semibold">Templates</span>
-              <button
-                onClick={() => setTemplatesOpen(false)}
-                className="cursor-pointer text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
-            </div>
-            {PRESETS.map((p) => (
-              <button
-                key={p.name}
-                onClick={() => applyPreset(p.gen)}
-                className="flex w-full cursor-pointer items-start gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-muted"
-              >
-                <span className="mt-0.5 text-muted-foreground">{p.icon}</span>
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-xs font-medium">
-                    {p.name}
-                    {p.fromLibrary && (
-                      <span className="rounded bg-indigo-500/15 px-1 py-px text-[9px] font-semibold text-indigo-500">
-                        Library
-                      </span>
-                    )}
-                  </span>
-                  <span className="block truncate text-[10px] text-muted-foreground">
-                    {p.description}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Shapes, upload and templates now live in a modal (the top + button);
+            the canvas fills the freed-up width. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={onUpload}
+          className="hidden"
+        />
 
         {/* Center: fixed 800×450 artboard, scaled to fit + zoom/pan */}
         <div
@@ -1137,13 +1211,23 @@ export function Animate({
               onDragOver={(e) => e.preventDefault()}
               onDrop={onDrop}
               onPointerDown={(e) => {
+                if (tool === "draw" && !isPlaying) {
+                  e.preventDefault()
+                  const p = toLocal(e.clientX, e.clientY)
+                  drawRef.current = [p.x, p.y]
+                  setDrawPts([p.x, p.y])
+                  return
+                }
                 if (e.target === e.currentTarget) setSelectedId(null)
               }}
-              className="relative overflow-hidden shadow-lg ring-1 ring-black/10"
+              className={cn(
+                "relative overflow-hidden shadow-lg ring-1 ring-black/10",
+                tool === "draw" && "cursor-crosshair"
+              )}
               style={{
                 width: CW,
                 height: CH,
-                backgroundColor: bg,
+                backgroundColor: curBg,
                 backgroundImage: grid
                   ? "radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px)"
                   : undefined,
@@ -1178,7 +1262,7 @@ export function Animate({
                 ))
               })}
 
-              {selected && !isPlaying && (
+              {selected && !isPlaying && tool !== "draw" && (
                 <SelectionBox
                   shape={selected}
                   onResizeStart={(corner, e) => {
@@ -1198,13 +1282,32 @@ export function Animate({
                 />
               )}
 
+              {/* live freehand stroke */}
+              {drawPts && drawPts.length >= 2 && (
+                <svg
+                  className="pointer-events-none absolute inset-0"
+                  width={CW}
+                  height={CH}
+                >
+                  <path
+                    d={pointsToPath(drawPts)}
+                    fill="none"
+                    stroke="#111827"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+
               {tracks.every(
                 (t) => !t.visible || trackFrameAt(t, current).shapes.length === 0
-              ) && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
-                  Drag a shape here, pick a template, or ask AI
-                </div>
-              )}
+              ) &&
+                !drawPts && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+                    Press + to add a shape, ✏ to draw, or ask AI
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -1213,8 +1316,8 @@ export function Animate({
         <aside className="w-60 shrink-0 overflow-y-auto border-l border-border p-3 max-md:h-[38%] max-md:w-full max-md:border-l-0 max-md:border-t">
           {!selected ? (
             <CanvasProperties
-              bg={bg}
-              onBg={setBg}
+              bg={curBg}
+              onBg={setBgAt}
               grid={grid}
               onGrid={setGrid}
               onion={onion}
@@ -1319,7 +1422,7 @@ export function Animate({
         activeTrack={safeActive}
         current={current}
         fps={fps}
-        bg={bg}
+        bgs={bgs}
         tab={timelineTab}
         onTab={setTimelineTab}
         onSelect={setCurrent}
@@ -1376,6 +1479,156 @@ export function Animate({
           ))}
         </div>
       )}
+
+      {/* Insert modal: shapes + upload + animation templates */}
+      {shapesOpen && (
+        <div
+          onPointerDown={() => setShapesOpen(false)}
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+          <div
+            onPointerDown={(e) => e.stopPropagation()}
+            className="max-h-full w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-popover p-4 shadow-2xl"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-semibold">Insert</span>
+              <button
+                onClick={() => setShapesOpen(false)}
+                className="cursor-pointer text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+              Shapes
+            </span>
+            <div className="grid grid-cols-6 gap-2">
+              {SHAPE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.type}
+                  title={tpl.label}
+                  onClick={() => {
+                    addShapeToCurrent(createShape(tpl.type, CW / 2, CH / 2))
+                    setShapesOpen(false)
+                  }}
+                  className="flex aspect-square cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                >
+                  {tpl.icon}
+                </button>
+              ))}
+              <button
+                title="Upload image / logo"
+                onClick={() => {
+                  setShapesOpen(false)
+                  fileInputRef.current?.click()
+                }}
+                className="flex aspect-square cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+              >
+                <ImagePlus className="size-4" />
+              </button>
+            </div>
+
+            <span className="mb-1.5 mt-4 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <LayoutTemplate className="size-3.5" /> Templates
+            </span>
+            <div className="space-y-0.5">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.name}
+                  onClick={() => applyPreset(p.gen)}
+                  className="flex w-full cursor-pointer items-start gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-muted"
+                >
+                  <span className="mt-0.5 text-muted-foreground">{p.icon}</span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-xs font-medium">
+                      {p.name}
+                      {p.fromLibrary && (
+                        <span className="rounded bg-indigo-500/15 px-1 py-px text-[9px] font-semibold text-indigo-500">
+                          Library
+                        </span>
+                      )}
+                    </span>
+                    <span className="block truncate text-[10px] text-muted-foreground">
+                      {p.description}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Go-to modal: jump to a second or frame (materialises frames up to it) */}
+      {gotoOpen && (
+        <div
+          onPointerDown={() => setGotoOpen(false)}
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+          <form
+            onPointerDown={(e) => e.stopPropagation()}
+            onSubmit={(e) => {
+              e.preventDefault()
+              const n = parseFloat(gotoVal)
+              if (!Number.isFinite(n)) return
+              goTo(gotoMode === "second" ? n * fps : n - 1)
+              setGotoVal("")
+            }}
+            className="w-full max-w-xs rounded-2xl border border-border bg-popover p-4 shadow-2xl"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-semibold">Go to</span>
+              <button
+                type="button"
+                onClick={() => setGotoOpen(false)}
+                className="cursor-pointer text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="mb-2 flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-0.5">
+              {(["second", "frame"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setGotoMode(m)}
+                  className={cn(
+                    "flex-1 cursor-pointer rounded-md px-2 py-1 text-xs font-medium capitalize",
+                    gotoMode === m
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <input
+              autoFocus
+              type="number"
+              step={gotoMode === "second" ? 0.1 : 1}
+              min={gotoMode === "second" ? 0 : 1}
+              value={gotoVal}
+              onChange={(e) => setGotoVal(e.target.value)}
+              placeholder={gotoMode === "second" ? "e.g. 5.5" : "e.g. 25"}
+              className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground/40"
+            />
+            <p className="mt-1.5 text-[10px] text-muted-foreground">
+              {gotoMode === "second"
+                ? `At ${fps} fps · 1s = ${fps} frames.`
+                : "Frame number (1-based)."}{" "}
+              Frames up to there are created if needed.
+            </p>
+            <button
+              type="submit"
+              className="mt-3 w-full cursor-pointer rounded-md bg-foreground py-1.5 text-xs font-medium text-background"
+            >
+              Go
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   )
 }
@@ -1408,16 +1661,5 @@ function HeaderBtn({
     >
       {children}
     </button>
-  )
-}
-
-function Rail({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="group relative">
-      {children}
-      <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs text-background opacity-0 shadow transition-opacity group-hover:opacity-100">
-        {label}
-      </span>
-    </div>
   )
 }

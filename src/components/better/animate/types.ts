@@ -15,6 +15,7 @@ export type ShapeType =
   | "icon"
   | "text"
   | "image"
+  | "draw"
 
 export type Texture =
   | "none"
@@ -58,6 +59,8 @@ export interface Shape {
   fontSize: number
   fontFamily: string
   src: string
+  /** Freehand stroke points for `draw` shapes, flattened [x0,y0,x1,y1,…] relative to (x,y). */
+  points: number[]
   texture: Texture
   gradFrom: string
   gradTo: string
@@ -175,18 +178,99 @@ export const trackFrameAt = (t: Track, i: number): Frame =>
 export const tracksLength = (tracks: Track[]) =>
   Math.max(1, ...tracks.map((t) => t.frames.length))
 
-/** Numeric shape props tweened between keyframes (position, size, rotation, opacity). */
-export const TWEEN_KEYS = ["x", "y", "w", "h", "rotation", "opacity"] as const
-export type TweenKey = (typeof TWEEN_KEYS)[number]
+// ─── Auto-keyframing / tweening ──────────────────────────────────────────────
+// Every animatable shape prop interpolates between poses like a video editor:
+// numeric props lerp, colour props lerp channel-wise, discrete props (type,
+// text, texture, flips, booleans, font…) step at the keyframe.
+
+/** Numeric shape props that interpolate linearly between keyframes. */
+export const NUM_TWEEN_KEYS = [
+  "x", "y", "w", "h", "rotation", "opacity", "radius", "strokeWidth",
+  "fontSize", "blur", "shadowX", "shadowY", "shadowBlur", "brightness",
+  "contrast", "saturate", "hueRotate", "grayscale", "gradAngle", "noiseFreq",
+  "noiseOpacity", "ditherSize",
+] as const
+/** Colour props that interpolate channel-wise (hex, incl. 8-digit alpha). */
+export const COLOR_TWEEN_KEYS = [
+  "fill", "stroke", "gradFrom", "gradTo", "shadowColor", "ditherColor",
+] as const
+export type NumTweenKey = (typeof NUM_TWEEN_KEYS)[number]
+export type ColorTweenKey = (typeof COLOR_TWEEN_KEYS)[number]
+/** All shape props that auto-keyframe — used to decide when an edit is a keyframe. */
+export const ANIM_KEYS = [...NUM_TWEEN_KEYS, ...COLOR_TWEEN_KEYS] as const
+
+function parseHex(hex: string): [number, number, number, number] | null {
+  let h = hex.trim().replace(/^#/, "")
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("")
+  if (h.length === 6) h += "ff"
+  if (h.length !== 8 || /[^0-9a-fA-F]/.test(h)) return null
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+    parseInt(h.slice(6, 8), 16),
+  ]
+}
+const hx = (c: number) =>
+  Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, "0")
+
+/** Interpolate two hex colours. Falls back to a hard switch if either can't be parsed. */
+export function lerpColor(a: string, b: string, t: number): string {
+  const pa = parseHex(a)
+  const pb = parseHex(b)
+  if (!pa || !pb) return t < 0.5 ? a : b
+  const r = hx(pa[0] + (pb[0] - pa[0]) * t)
+  const g = hx(pa[1] + (pb[1] - pa[1]) * t)
+  const bl = hx(pa[2] + (pb[2] - pa[2]) * t)
+  const al = Math.round(pa[3] + (pb[3] - pa[3]) * t)
+  return al >= 255 ? `#${r}${g}${bl}` : `#${r}${g}${bl}${hx(al)}`
+}
+
+/** SVG path data for a flattened point list [x0,y0,x1,y1,…] (freehand `draw` shapes). */
+export function pointsToPath(points: number[]): string {
+  if (points.length < 2) return ""
+  let d = `M ${points[0]} ${points[1]}`
+  for (let i = 2; i < points.length - 1; i += 2) d += ` L ${points[i]} ${points[i + 1]}`
+  return d
+}
+
+/** True when any animatable (numeric or colour) prop differs → `cur` is a keyframe. */
+function isKeyframe(cur: Shape, prev: Shape): boolean {
+  for (const k of NUM_TWEEN_KEYS) if (cur[k] !== prev[k]) return true
+  for (const k of COLOR_TWEEN_KEYS) if (cur[k] !== prev[k]) return true
+  return false
+}
+
+/** Interpolate one shape between poses `a` and `b` at fraction `t` (discrete props follow `b`). */
+function interpShape(s: Shape, a: Shape, b: Shape, t: number): Shape {
+  const next = { ...s }
+  for (const k of NUM_TWEEN_KEYS) next[k] = a[k] + (b[k] - a[k]) * t
+  for (const k of COLOR_TWEEN_KEYS) next[k] = lerpColor(a[k], b[k], t)
+  return next
+}
+
+/** Index of the nearest keyframe strictly before `n` for value list `at` (0 if none). */
+function prevKeyframe<T>(
+  n: number,
+  at: (i: number) => T | undefined,
+  changed: (cur: T, prev: T) => boolean
+): number {
+  for (let i = n - 1; i >= 1; i--) {
+    const cur = at(i)
+    if (cur === undefined) return i + 1 // value absent here → its run starts next
+    const prev = at(i - 1)
+    if (prev === undefined) return i // appears at i
+    if (changed(cur, prev)) return i // change point
+  }
+  return 0
+}
 
 /**
- * Video-editor-style tweening. After a shape (matched by `id`) is moved,
- * resized or rotated on frame `current`, fill in the motion: interpolate every
- * frame between it and the nearest earlier *keyframe* — a frame where the shape
- * first appears or where one of its `TWEEN_KEYS` changes from the frame before.
- * Frames before that keyframe and after `current` are left untouched, so only
- * the last edited segment re-tweens. Returns a new `Frame[]` (or the same array
- * if there's nothing to fill).
+ * Video-editor-style auto-keyframing. After a shape (matched by `id`) is edited
+ * on frame `current` — moved, resized, rotated, recoloured, restyled — fill in
+ * every frame between it and the nearest earlier keyframe (a frame where the
+ * shape appears or any animatable prop changes). Frames before that keyframe and
+ * after `current` are left untouched, so only the last edited segment re-tweens.
  */
 export function tweenFrames(
   frames: Frame[],
@@ -198,25 +282,7 @@ export function tweenFrames(
   const at = (i: number) => frames[i].shapes.find((s) => s.id === id)
   const end = at(n)
   if (!end) return frames
-
-  // Walk back to the nearest keyframe `a` (appearance or transform change point).
-  let a = 0
-  for (let i = n - 1; i >= 1; i--) {
-    const cur = at(i)
-    if (!cur) {
-      a = i + 1 // shape absent here → its current run starts on the next frame
-      break
-    }
-    const prev = at(i - 1)
-    if (!prev) {
-      a = i // shape appears at i
-      break
-    }
-    if (TWEEN_KEYS.some((k) => cur[k] !== prev[k])) {
-      a = i // transform change point
-      break
-    }
-  }
+  const a = prevKeyframe(n, at, isKeyframe)
   if (a >= n) return frames // no gap to fill
   const start = at(a)
   if (!start) return frames
@@ -226,14 +292,37 @@ export function tweenFrames(
     const t = (i - a) / (n - a)
     return {
       ...fr,
-      shapes: fr.shapes.map((s) => {
-        if (s.id !== id) return s
-        const next = { ...s }
-        for (const k of TWEEN_KEYS) next[k] = start[k] + (end[k] - start[k]) * t
-        return next
-      }),
+      shapes: fr.shapes.map((s) => (s.id === id ? interpShape(s, start, end, t) : s)),
     }
   })
+}
+
+/**
+ * Tween the document background colour between keyframes, the same way shapes
+ * tween. After `bgs[current]` is set, interpolate every entry back to the
+ * nearest earlier background keyframe. Returns a new array.
+ */
+export function tweenBgs(bgs: string[], current: number): string[] {
+  const n = Math.min(current, bgs.length - 1)
+  if (n <= 0) return bgs
+  const a = prevKeyframe(n, (i) => bgs[i], (cur, prev) => cur !== prev)
+  if (a >= n) return bgs
+  return bgs.map((c, i) =>
+    i <= a || i >= n ? c : lerpColor(bgs[a], bgs[n], (i - a) / (n - a))
+  )
+}
+
+/** Read a per-frame background, holding the last value for out-of-range indices. */
+export const bgAt = (bgs: string[], i: number) =>
+  bgs[Math.max(0, Math.min(i, bgs.length - 1))] ?? "#ffffff"
+
+/** Pad/trim a per-frame background array to `len`, holding the last colour. */
+export function padBgs(bgs: string[], len: number): string[] {
+  if (bgs.length === len) return bgs
+  const last = bgs[bgs.length - 1] ?? "#ffffff"
+  const next = bgs.slice(0, len)
+  while (next.length < len) next.push(last)
+  return next
 }
 
 export function makeShape(p: Partial<Shape> & { type: ShapeType }): Shape {
@@ -257,6 +346,7 @@ export function makeShape(p: Partial<Shape> & { type: ShapeType }): Shape {
     fontSize: 16,
     fontFamily: FONTS[0].css,
     src: "",
+    points: [],
     texture: "none",
     gradFrom: "#818cf8",
     gradTo: "#4338ca",

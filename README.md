@@ -45,16 +45,17 @@ These are still in the codebase (source files intact, direct `/components/<slug>
 
 A full frame-by-frame + keyframe motion editor that runs entirely in the browser (`src/components/better/animate/`):
 
-- **Canvas**: fixed 800×450 artboard, 13 shape types (squares, circles, stars, hearts, hexagons, lines, arrows, buttons, icons, text, images…), drag/resize/rotate, textures (gradient, noise, paper, dithering), hand-drawn edges, ~1,500 Phosphor icons loaded on the fly.
+- **Canvas**: fixed 800×450 (16:9) artboard, 13 shape types (squares, circles, stars, hearts, hexagons, lines, arrows, buttons, icons, text, images…) inserted from a top **+** modal, plus a **pencil** for freehand drawing; drag/resize/rotate, textures (gradient, noise, paper, dithering), hand-drawn edges, ~1,500 Phosphor icons loaded on the fly.
 - **Effects**: blur, drop shadow, blend modes, brightness/contrast/saturation/hue/grayscale, flip — rendered live and in exports.
+- **Auto-keyframing (tweening)**: always on, just like a video editor — change *any* animatable property (position, size, rotation, opacity, radius, border width, blur, all the effects, **and colours** — fill, stroke, gradient, shadow, even the canvas **background**) on a later frame and the editor interpolates every in-between frame back to the previous keyframe. Numeric props lerp, colours lerp channel-wise, discrete props (text, texture, flips…) step. Only the edited segment re-tweens; earlier keyframes are untouched. The end frame keeps your exact value.
+- **Go to** (clock button): jump straight to any second or frame — frames up to there are created on the active track (carrying the shapes forward) so you can pose and tween at that point.
 - **Multi-track timeline**: layered tracks (like a layers panel — top row renders on top), each with its own frame sequence; shorter tracks hold their last frame. Two timeline views: **Frames** (canvas thumbnails per track) and **Time** (second ruler with a scrubbable playhead).
-- **Editor ergonomics**: undo/redo, copy/paste/duplicate shapes, arrow-key nudging, zoom-to-cursor + pan, onion skinning, frame context menu (copy/paste/paste-to-next-10/duplicate/delete), canvas background + grid settings.
-- **Tweening** (toggle in the header, off by default): with it on, moving/resizing/rotating a shape on a later frame auto-fills the in-between frames back to its previous keyframe — position, size, rotation and opacity interpolated, just like a video editor. Only the edited segment re-tweens; earlier keyframes are left alone. Off preserves the pure frame-by-frame (stop-motion) workflow.
+- **Editor ergonomics**: undo/redo, copy/paste/duplicate shapes, arrow-key nudging, zoom-to-cursor + pan, onion skinning, frame context menu (copy/paste/paste-to-next-10/duplicate/delete), per-frame canvas background + grid settings.
 - **Templates**: one-click animation presets (Confetti, Ripple, Bounce, Pulse, Orbit) plus presets that recreate library components as editable frames (Text Shimmer, Dots Loader, Notification, Typewriter, Marquee).
 - **AI chat** _(disabled by default — see below)_: describe an animation ("a red ball bouncing") and a Mistral model plans objects + keyframes which the editor bakes into frames at your fps; keep chatting to refine ("make it red", "add 2 seconds"). Conversation-aware, with retries and sanitized output.
 - **Export**: HD 1920×1080 WebM, all tracks composited.
 
-Keyboard shortcuts: `Space` play/pause · `[` `]` step frames · `Ctrl+Z/Y` undo/redo · `Ctrl+C/V/D` copy/paste/duplicate · arrows nudge (Shift = ×10) · `O` onion skin · `Del` delete · `Ctrl+scroll` zoom.
+Keyboard shortcuts: `Space` play/pause · `[` `]` step frames · `Ctrl+Z/Y` undo/redo · `Ctrl+C/V/D` copy/paste/duplicate · arrows nudge (Shift = ×10) · `B` pencil · `O` onion skin · `Del` delete · `Ctrl+scroll` zoom.
 
 ### AI chat — disabled by default
 
