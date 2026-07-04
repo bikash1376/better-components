@@ -358,8 +358,9 @@ export function Animate({
           i === idx
             ? {
                 ...fr,
+                // Editing a shape on this frame makes it a keyframe (tween anchor).
                 shapes: fr.shapes.map((s) =>
-                  s.id === id ? { ...s, ...patch } : s
+                  s.id === id ? { ...s, ...patch, key: true } : s
                 ),
               }
             : fr
