@@ -1085,13 +1085,13 @@ export function Animate({
       {/* Header: [insert/tools + history + zoom] [frame counter] [playback+export] */}
       <header className="grid grid-cols-3 items-center border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">
-          <HeaderBtn
+          <button
             onClick={() => setShapesOpen(true)}
             title="Insert a shape or template"
-            bordered
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background hover:opacity-90"
           >
-            <Plus className="size-4" />
-          </HeaderBtn>
+            <Plus className="size-3.5" /> Add
+          </button>
           <HeaderBtn
             onClick={() => setTool((t) => (t === "draw" ? "select" : "draw"))}
             title="Pencil — draw freehand (B)"
