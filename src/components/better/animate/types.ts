@@ -124,6 +124,56 @@ export const CH = 450
 export const FRAME_RATES = [12, 24, 30, 60]
 export const MAX_FRAMES = 1200
 
+/**
+ * A custom frame-rate segment: frames `start`…`end` (1-based, inclusive) play
+ * at `fps`. Segments must not overlap. Frames outside every segment fall back
+ * to the timeline's base fps.
+ */
+export interface FpsSegment {
+  start: number
+  end: number
+  fps: number
+}
+
+/** Effective fps for global frame index `i` (0-based): first covering segment, else base. */
+export function fpsAt(base: number, segments: FpsSegment[], i: number): number {
+  const f = i + 1 // segments are authored 1-based
+  for (const s of segments) if (f >= s.start && f <= s.end) return s.fps
+  return base
+}
+
+/** Seconds elapsed before frame `i` (0-based) given per-frame fps. */
+export function timeAt(base: number, segments: FpsSegment[], i: number): number {
+  let t = 0
+  for (let k = 0; k < i; k++) t += 1 / fpsAt(base, segments, k)
+  return t
+}
+
+/** Total playback duration in seconds for `total` frames under per-frame fps. */
+export function totalDuration(
+  base: number,
+  segments: FpsSegment[],
+  total: number
+): number {
+  return timeAt(base, segments, total)
+}
+
+/** Validate fps segments: positive fps, start<=end, no overlaps. Returns an error string or null. */
+export function validateSegments(segments: FpsSegment[]): string | null {
+  const sorted = [...segments].sort((a, b) => a.start - b.start)
+  for (const s of sorted) {
+    if (!Number.isFinite(s.start) || !Number.isFinite(s.end) || s.start < 1)
+      return "Frame numbers must be 1 or greater."
+    if (s.end < s.start) return "End frame must be ≥ start frame."
+    if (s.fps < 1 || s.fps > 240) return "FPS must be between 1 and 240."
+  }
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].start <= sorted[i - 1].end)
+      return `Segments overlap at frame ${sorted[i].start}.`
+  }
+  return null
+}
+
 export const TEXTURES: Texture[] = [
   "none",
   "smooth",

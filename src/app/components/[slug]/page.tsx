@@ -3,12 +3,13 @@ import path from "node:path"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { ArrowLeft, BookOpen } from "lucide-react"
+import { BookOpen } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { installCommand } from "@/lib/registry"
 import { ActionDock } from "@/components/site/action-dock"
 import { CommandWithTooltip } from "@/components/site/command-with-tooltip"
+import { FullBleedTopBar } from "@/components/site/fullbleed-top-bar"
 import { ComponentSidebar } from "@/components/site/component-sidebar"
 import { ComponentPlayground } from "@/components/site/playground"
 import {
@@ -65,17 +66,9 @@ export default async function ComponentPage({
   if (component.fullBleed) {
     return (
       <main className="relative flex h-svh flex-col">
-        {/* In-flow top bar so it never overlaps the editor's own toolbar. */}
-        <div className="flex items-center gap-2 px-3 py-2.5">
-          <Link href="/components" className={docsLinkClass}>
-            <ArrowLeft className="size-4" />
-            Back
-          </Link>
-          <Link href="/docs" className={docsLinkClass}>
-            <BookOpen className="size-4" />
-            Docs
-          </Link>
-        </div>
+        {/* In-flow top bar so it never overlaps the editor's own toolbar.
+            Back confirms first — leaving discards unsaved editor progress. */}
+        <FullBleedTopBar backHref="/components" />
         <div className="min-h-0 flex-1 px-3 pb-3">
           <component.Demo />
         </div>

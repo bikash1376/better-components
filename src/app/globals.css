@@ -98,6 +98,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Post-tour attention pulse on the Animate "+ Add" button. */
+@keyframes tour-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--foreground) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in oklch, var(--foreground) 0%, transparent);
+  }
+}
+.tour-breathe {
+  animation: tour-breathe 1.4s ease-out 3;
+  border-radius: var(--radius-md);
+}
+
 @layer base {
   * {
     border-color: var(--border);

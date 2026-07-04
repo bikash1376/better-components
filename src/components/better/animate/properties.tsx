@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
   FlipHorizontal2,
@@ -10,8 +10,17 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Slider as UiSlider } from "@/components/ui/slider"
 
-import { PHOSPHOR_SUGGEST } from "./icons"
+import { PhosphorIcon, loadPhosphorNames } from "./icons"
 import { TEXT_ANIMS } from "./text-anims"
 import {
   type BlendMode,
@@ -56,35 +65,65 @@ function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="mb-2 rounded-lg border border-border/60">
+    <div className="border-b border-border/50 last:border-b-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full cursor-pointer items-center justify-between px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        className="flex w-full cursor-pointer items-center justify-between py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
       >
         {title}
         <ChevronDown
-          className={cn("size-3.5 transition-transform", !open && "-rotate-90")}
+          className={cn(
+            "size-3 opacity-60 transition-transform",
+            !open && "-rotate-90"
+          )}
         />
       </button>
-      {open && <div className="px-2.5 pb-2.5">{children}</div>}
+      {open && <div className="pb-3">{children}</div>}
     </div>
   )
 }
 
+/**
+ * Compact numeric control: type a value, scroll the wheel over it, or drag the
+ * label left/right to scrub (Figma-style). `step` scales drag/wheel sensitivity.
+ */
 function NumberField({
   label,
   value,
   onChange,
   min,
+  step = 1,
 }: {
   label: string
   value: number
   onChange: (v: number) => void
   min?: number
+  step?: number
 }) {
+  const drag = useRef<{ x: number; v: number } | null>(null)
+  const clamp = (v: number) => (min !== undefined ? Math.max(min, v) : v)
+
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-medium text-muted-foreground">
+      <span
+        onPointerDown={(e) => {
+          e.preventDefault()
+          ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+          drag.current = { x: e.clientX, v: value }
+        }}
+        onPointerMove={(e) => {
+          if (!drag.current) return
+          const dv = (e.clientX - drag.current.x) * step
+          onChange(clamp(Math.round(drag.current.v + dv)))
+        }}
+        onPointerUp={(e) => {
+          ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+          drag.current = null
+        }}
+        title="Drag to scrub"
+        className="mb-1 flex w-fit cursor-ew-resize select-none items-center gap-1 text-[11px] font-medium text-muted-foreground"
+      >
+        <span className="text-foreground/30">⟺</span>
         {label}
       </span>
       <input
@@ -92,7 +131,13 @@ function NumberField({
         value={Math.round(value)}
         onChange={(e) => {
           const v = +e.target.value
-          if (Number.isFinite(v)) onChange(min !== undefined ? Math.max(min, v) : v)
+          if (Number.isFinite(v)) onChange(clamp(v))
+        }}
+        onWheel={(e) => {
+          // Only when focused, so scrolling the panel doesn't hijack values.
+          if (document.activeElement !== e.currentTarget) return
+          e.stopPropagation()
+          onChange(clamp(Math.round(value + (e.deltaY < 0 ? step : -step))))
         }}
         className={FIELD}
       />
@@ -117,14 +162,12 @@ function Slider({
 }) {
   return (
     <Row label={label}>
-      <input
-        type="range"
+      <UiSlider
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(e) => onChange(+e.target.value)}
-        className="w-full cursor-pointer"
+        value={[value]}
+        onValueChange={([v]) => onChange(v)}
       />
     </Row>
   )
@@ -194,17 +237,19 @@ export function Properties({
         <div className="mb-2 grid grid-cols-2 gap-2">
           <NumberField label="X" value={s.x} onChange={(x) => onChange({ x })} />
           <NumberField label="Y" value={s.y} onChange={(y) => onChange({ y })} />
+          {/* Resizing from the panel grows symmetrically about the centre
+              (adjust x/y by half the delta) instead of drifting off a corner. */}
           <NumberField
             label="Width"
             value={s.w}
             min={1}
-            onChange={(w) => onChange({ w })}
+            onChange={(w) => onChange({ w, x: s.x + (s.w - w) / 2 })}
           />
           <NumberField
             label="Height"
             value={s.h}
             min={1}
-            onChange={(h) => onChange({ h })}
+            onChange={(h) => onChange({ h, y: s.y + (s.h - h) / 2 })}
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -271,13 +316,12 @@ export function Properties({
               onChange={(e) => onChange({ stroke: e.target.value })}
               className={COLOR_INPUT}
             />
-            <input
-              type="range"
+            <UiSlider
               min={0}
               max={12}
-              value={s.strokeWidth}
-              onChange={(e) => onChange({ strokeWidth: +e.target.value })}
-              className="flex-1 cursor-pointer"
+              value={[s.strokeWidth]}
+              onValueChange={([v]) => onChange({ strokeWidth: v })}
+              className="flex-1"
             />
             <button
               onClick={() => onChange({ strokeWidth: 0 })}
@@ -307,11 +351,9 @@ export function Properties({
             <span className="text-[11px] font-medium text-muted-foreground">
               Hand-drawn edges
             </span>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={s.hand}
-              onChange={(e) => onChange({ hand: e.target.checked })}
-              className="size-4 cursor-pointer accent-foreground"
+              onCheckedChange={(v) => onChange({ hand: v === true })}
             />
           </label>
         )}
@@ -329,17 +371,25 @@ export function Properties({
                 />
               </Row>
               <Row label="Font">
-                <select
+                <Select
                   value={s.fontFamily}
-                  onChange={(e) => onChange({ fontFamily: e.target.value })}
-                  className={cn(FIELD, "cursor-pointer")}
+                  onValueChange={(fontFamily) => onChange({ fontFamily })}
                 >
-                  {FONTS.map((f) => (
-                    <option key={f.label} value={f.css} style={{ fontFamily: f.css }}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONTS.map((f) => (
+                      <SelectItem
+                        key={f.label}
+                        value={f.css}
+                        style={{ fontFamily: f.css }}
+                      >
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Row>
             </>
           )}
@@ -352,32 +402,10 @@ export function Properties({
           />
           {s.type === "icon" && (
             <>
-              <Row label="Phosphor icon (any of ~1500, loaded on the fly)">
-                <input
-                  value={s.iconName}
-                  onChange={(e) =>
-                    onChange({ iconName: e.target.value.trim().toLowerCase() })
-                  }
-                  placeholder="e.g. rocket, film-slate, heart"
-                  className={FIELD}
-                />
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {PHOSPHOR_SUGGEST.slice(0, 10).map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => onChange({ iconName: n })}
-                      className={cn(
-                        "cursor-pointer rounded border px-1.5 py-0.5 text-[10px]",
-                        s.iconName === n
-                          ? "border-foreground bg-muted"
-                          : "border-border text-muted-foreground"
-                      )}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </Row>
+              <IconPicker
+                value={s.iconName}
+                onPick={(iconName) => onChange({ iconName })}
+              />
               <Row label="…or a simple glyph">
                 <div className="flex flex-wrap gap-1">
                   {GLYPHS.map((g) => (
@@ -455,14 +483,12 @@ export function Properties({
                 onChange={(e) => onChange({ gradTo: e.target.value })}
                 className={COLOR_INPUT}
               />
-              <input
-                type="range"
+              <UiSlider
                 min={0}
                 max={360}
-                value={s.gradAngle}
-                onChange={(e) => onChange({ gradAngle: +e.target.value })}
-                className="flex-1 cursor-pointer"
-                title="Gradient angle"
+                value={[s.gradAngle]}
+                onValueChange={([v]) => onChange({ gradAngle: v })}
+                className="flex-1"
               />
             </div>
           )}
@@ -538,17 +564,21 @@ export function Properties({
             <RotateCcw className="size-3" /> Reset
           </button>
         </div>
-        <select
+        <Select
           value={s.blendMode}
-          onChange={(e) => onChange({ blendMode: e.target.value as BlendMode })}
-          className={cn(FIELD, "mb-3 cursor-pointer capitalize")}
+          onValueChange={(v) => onChange({ blendMode: v as BlendMode })}
         >
-          {BLEND_MODES.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="mb-3 capitalize">
+            <SelectValue placeholder="Blend mode" />
+          </SelectTrigger>
+          <SelectContent>
+            {BLEND_MODES.map((m) => (
+              <SelectItem key={m} value={m} className="capitalize">
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Slider
           label={`Blur ${s.blur}px`}
@@ -562,11 +592,9 @@ export function Properties({
           <span className="text-[11px] font-medium text-muted-foreground">
             Drop shadow
           </span>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={s.shadow}
-            onChange={(e) => onChange({ shadow: e.target.checked })}
-            className="size-4 cursor-pointer accent-foreground"
+            onCheckedChange={(v) => onChange({ shadow: v === true })}
           />
         </label>
         {s.shadow && (
@@ -648,6 +676,80 @@ export function Properties({
   )
 }
 
+/** Searchable Phosphor icon picker with live rendered previews. */
+function IconPicker({
+  value,
+  onPick,
+}: {
+  value: string
+  onPick: (name: string) => void
+}) {
+  const [q, setQ] = useState("")
+  const [names, setNames] = useState<string[]>([])
+
+  useEffect(() => {
+    let alive = true
+    loadPhosphorNames().then((n) => {
+      if (alive) setNames(n)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const query = q.trim().toLowerCase()
+  const results = useMemo(() => {
+    if (!names.length) return []
+    if (!query) return names.slice(0, 48)
+    const starts: string[] = []
+    const contains: string[] = []
+    for (const n of names) {
+      if (n.startsWith(query)) starts.push(n)
+      else if (n.includes(query)) contains.push(n)
+      if (starts.length >= 60) break
+    }
+    return [...starts, ...contains].slice(0, 60)
+  }, [names, query])
+
+  return (
+    <Row label="Icon">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search 1,500+ icons…"
+        className={FIELD}
+      />
+      {value && (
+        <p className="mt-1 truncate text-[10px] text-muted-foreground">
+          Selected: <span className="text-foreground">{value}</span>
+        </p>
+      )}
+      <div className="mt-1.5 grid max-h-40 grid-cols-6 gap-1 overflow-y-auto rounded-md border border-border/60 p-1.5">
+        {results.map((n) => (
+          <button
+            key={n}
+            onClick={() => onPick(n)}
+            title={n}
+            className={cn(
+              "flex aspect-square cursor-pointer items-center justify-center rounded border",
+              value === n
+                ? "border-foreground bg-muted"
+                : "border-transparent hover:bg-muted"
+            )}
+          >
+            <PhosphorIcon name={n} color="#8b8b8b" size={18} />
+          </button>
+        ))}
+        {!results.length && (
+          <p className="col-span-6 px-1 py-3 text-center text-[10px] text-muted-foreground">
+            {names.length ? "No icons match." : "Loading icons…"}
+          </p>
+        )}
+      </div>
+    </Row>
+  )
+}
+
 /** Shown when nothing is selected — canvas/document settings. */
 export function CanvasProperties({
   bg,
@@ -697,36 +799,20 @@ export function CanvasProperties({
           <span className="text-[11px] font-medium text-muted-foreground">
             Dot grid
           </span>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={grid}
-            onChange={(e) => onGrid(e.target.checked)}
-            className="size-4 cursor-pointer accent-foreground"
+            onCheckedChange={(v) => onGrid(v === true)}
           />
         </label>
         <label className="mb-1 flex cursor-pointer items-center justify-between">
           <span className="text-[11px] font-medium text-muted-foreground">
             Onion skin (O)
           </span>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={onion}
-            onChange={(e) => onOnion(e.target.checked)}
-            className="size-4 cursor-pointer accent-foreground"
+            onCheckedChange={(v) => onOnion(v === true)}
           />
         </label>
-      </Section>
-      <Section title="Shortcuts" defaultOpen={false}>
-        <ul className="space-y-1 text-[11px] text-muted-foreground">
-          <li>⌫ / Del — delete shape</li>
-          <li>Ctrl+Z / Ctrl+Shift+Z — undo / redo</li>
-          <li>Ctrl+C / V / D — copy / paste / duplicate</li>
-          <li>Arrows — nudge (Shift = ×10)</li>
-          <li>Space — play / pause</li>
-          <li>[ and ] — previous / next frame</li>
-          <li>O — onion skin · Esc — deselect</li>
-          <li>Ctrl+scroll — zoom · scroll — pan</li>
-        </ul>
       </Section>
     </div>
   )
