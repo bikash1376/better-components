@@ -157,6 +157,11 @@ export const ShapeView = memo(function ShapeView({
     height: Math.max(1, s.h),
     opacity: ghost ? s.opacity * 0.25 : s.opacity,
     transform: shapeTransform(s),
+    // SVG elements default CSS transform-origin to 0 0 (user space), so without
+    // this they'd rotate/flip around the top-left instead of their centre. Pin
+    // every shape's pivot to its own box centre.
+    transformOrigin: "center",
+    transformBox: "border-box",
     filter: domFilter(s),
     mixBlendMode: s.blendMode !== "normal" ? s.blendMode : undefined,
     pointerEvents: ghost ? "none" : undefined,

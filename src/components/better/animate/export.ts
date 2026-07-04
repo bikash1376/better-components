@@ -1,12 +1,14 @@
 import { getPhosphorUrl, imageCache, preloadIcons, preloadImages } from "./icons"
 import {
   type Frame,
+  type FpsSegment,
   type Shape,
   type Track,
   CH,
   CW,
   bgAt,
   effectsFilter,
+  fpsAt,
   heartSegments,
   hexagonPoints,
   starPoints,
@@ -292,8 +294,16 @@ export function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
   ctx.restore()
 }
 
-/** Render every composited frame to an offscreen canvas and record an HD webm. */
-export async function exportWebm(tracks: Track[], fps: number, bgs: string[]) {
+/**
+ * Render every composited frame to an offscreen canvas and record an HD webm.
+ * `segments` (optional) apply per-frame custom fps; frames outside them use `fps`.
+ */
+export async function exportWebm(
+  tracks: Track[],
+  fps: number,
+  bgs: string[],
+  segments: FpsSegment[] = []
+) {
   const allFrames = tracks.flatMap((t) => (t.visible ? t.frames : []))
   await preloadImages(allFrames)
   await preloadIcons(allFrames)
@@ -311,7 +321,9 @@ export async function exportWebm(tracks: Track[], fps: number, bgs: string[]) {
     "video/webm;codecs=vp8",
     "video/webm",
   ].find((m) => MediaRecorder.isTypeSupported(m))!
-  const stream = cvs.captureStream(fps)
+  // Capture at the highest rate any segment needs so fast frames aren't dropped.
+  const peakFps = Math.max(fps, ...segments.map((s) => s.fps))
+  const stream = cvs.captureStream(peakFps)
   const track = stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack
   const rec = new MediaRecorder(stream, {
     mimeType: mime,
@@ -325,10 +337,11 @@ export async function exportWebm(tracks: Track[], fps: number, bgs: string[]) {
   const total = tracksLength(tracks)
   const ticks = total > 1 ? total : Math.round(2 * fps)
   for (let i = 0; i < ticks; i++) {
-    drawComposite(ctx, tracks, i % total, CW, CH, bgAt(bgs, i % total))
+    const f = i % total
+    drawComposite(ctx, tracks, f, CW, CH, bgAt(bgs, f))
     // Nudge the capture track so no frame is dropped by the wall-clock sampler.
     track.requestFrame?.()
-    await new Promise((r) => setTimeout(r, 1000 / fps))
+    await new Promise((r) => setTimeout(r, 1000 / fpsAt(fps, segments, f)))
   }
   rec.stop()
   await stopped

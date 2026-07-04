@@ -24,6 +24,61 @@ export const PHOSPHOR_SUGGEST = [
   "trophy",
 ]
 
+// Offline/CSP fallback so the picker still shows something if the CDN list
+// can't be fetched. Kept broad but conservative (all valid regular-weight names).
+const PHOSPHOR_FALLBACK = [
+  "star", "heart", "play", "pause", "stop", "film-slate", "camera", "video-camera",
+  "rocket", "lightning", "sparkle", "sun", "moon", "cloud", "check-circle",
+  "x-circle", "arrow-right", "arrow-left", "arrow-up", "arrow-down", "caret-right",
+  "music-notes", "fire", "crown", "trophy", "gift", "bell", "chat-circle",
+  "envelope", "phone", "user", "users", "house", "gear", "wrench",
+  "magnifying-glass", "funnel", "tag", "bookmark", "flag", "map-pin", "globe",
+  "compass", "clock", "calendar", "timer", "hourglass", "lightbulb", "brain",
+  "eye", "eye-slash", "lock", "lock-open", "key", "shield", "shield-check",
+  "trash", "pencil", "eraser", "paint-brush", "palette", "image", "images",
+  "folder", "file", "download", "upload", "share", "link", "paperclip", "copy",
+  "clipboard", "printer", "scissors", "ruler", "crop", "magic-wand", "cursor",
+  "hand", "thumbs-up", "thumbs-down", "smiley", "megaphone", "microphone",
+  "headphones", "wifi-high", "battery-full", "plug", "coffee", "pizza",
+  "hamburger", "cake", "cookie", "car", "airplane", "boat", "bicycle", "train",
+  "tree", "leaf", "flower", "plant", "mountains", "waves", "snowflake", "umbrella",
+  "drop", "planet", "medal", "coin", "currency-dollar", "wallet", "credit-card",
+  "bank", "shopping-cart", "shopping-bag", "storefront", "package", "truck",
+  "confetti", "ghost", "robot", "skull", "bug", "butterfly", "bird", "cat", "dog",
+  "fish", "paw-print", "basketball", "game-controller", "puzzle-piece", "guitar",
+  "book", "book-open", "graduation-cap", "note", "notebook", "newspaper",
+  "chart-bar", "chart-line", "chart-pie", "target", "hand-heart",
+]
+
+// Real, complete icon-name list pulled from jsdelivr's package file index.
+let phosphorNames: string[] | null = null
+let namesPromise: Promise<string[]> | null = null
+
+/** All regular-weight Phosphor icon names (fetched once; falls back if offline). */
+export function loadPhosphorNames(): Promise<string[]> {
+  if (phosphorNames) return Promise.resolve(phosphorNames)
+  if (namesPromise) return namesPromise
+  const PREFIX = "/assets/regular/"
+  namesPromise = fetch(
+    "https://data.jsdelivr.com/v1/packages/npm/@phosphor-icons/core@2/flat"
+  )
+    .then((r) => (r.ok ? (r.json() as Promise<{ files?: { name: string }[] }>) : Promise.reject()))
+    .then((data) => {
+      const names = (data.files ?? [])
+        .map((f) => f.name)
+        .filter((n) => n.startsWith(PREFIX) && n.endsWith(".svg"))
+        .map((n) => n.slice(PREFIX.length, -4))
+        .sort()
+      phosphorNames = names.length ? names : PHOSPHOR_FALLBACK
+      return phosphorNames
+    })
+    .catch(() => {
+      phosphorNames = PHOSPHOR_FALLBACK
+      return PHOSPHOR_FALLBACK
+    })
+  return namesPromise
+}
+
 const phosphorRaw = new Map<string, string>() // name → raw svg text
 const phosphorUrl = new Map<string, string>() // `${name}|${color}` → data URL
 const phosphorFailed = new Set<string>() // names that 404'd — don't refetch
@@ -55,12 +110,15 @@ export async function phosphorDataUrl(
     raw = await res.text()
     phosphorRaw.set(name, raw)
   }
-  // Force the requested color and drop fixed width/height.
+  // Recolor in place: Phosphor svgs carry `fill="currentColor"` on the <svg>
+  // (plus occasional hex fills). Replace those with the requested colour —
+  // appending a second fill attribute makes the XML invalid and the <img>
+  // renders broken. Leave `fill="none"` (outline parts) untouched.
   const colored = raw
-    .replace(/<svg([^>]*)>/, `<svg$1 fill="${color}">`)
-    .replace(/\s(width|height)="[^"]*"/g, "")
+    .replace(/fill="currentColor"/g, `fill="${color}"`)
     .replace(/fill="#[0-9a-fA-F]+"/g, `fill="${color}"`)
-  const url = `data:image/svg+xml;utf8,${encodeURIComponent(colored)}`
+    .replace(/\s(width|height)="[^"]*"/g, "")
+  const url = `data:image/svg+xml,${encodeURIComponent(colored)}`
   phosphorUrl.set(key, url)
   return url
 }

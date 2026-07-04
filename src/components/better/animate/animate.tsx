@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTheme } from "next-themes"
 import {
   Circle,
+  ChevronDown,
   Clock,
   Download,
   Heart,
@@ -19,11 +21,14 @@ import {
   Play,
   Plus,
   Redo2,
+  Repeat,
+  RotateCcw,
   Send,
   Shapes,
   Sparkles,
   Square,
   Star,
+  Trash2,
   Triangle as TriangleIcon,
   Type,
   Undo2,
@@ -33,8 +38,23 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { type AiScene, bakeScene } from "./ai"
+import { Tour } from "./tour"
 import { exportWebm } from "./export"
 import { imageCache } from "./icons"
 import { PRESETS } from "./presets"
@@ -46,6 +66,7 @@ import {
   type ChatMessage,
   type Corner,
   type Frame,
+  type FpsSegment,
   type Shape,
   type ShapeType,
   type Track,
@@ -59,6 +80,7 @@ import {
   cloneShapes,
   createShape,
   emptyFrame,
+  fpsAt,
   makeShape,
   makeTrack,
   padBgs,
@@ -68,6 +90,7 @@ import {
   tweenBgs,
   tweenFrames,
   uid,
+  validateSegments,
 } from "./types"
 
 const SHAPE_TEMPLATES: { type: ShapeType; label: string; icon: React.ReactNode }[] = [
@@ -113,6 +136,37 @@ const MAX_HISTORY = 60
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 6
 
+// `GiPencil` (react-icons/gi) glyph, reused as a custom draw cursor so the
+// pointer reads as a pencil while the draw tool is active.
+const PENCIL_PATH =
+  "M429.548 30.836c-.307-.003-.6.005-.875.024-2.212.147-3.34.653-4.576 1.89l-27.58 27.58 55.156 55.154 27.578-27.58c1.238-1.236 1.744-2.363 1.89-4.575.15-2.21-.37-5.433-1.805-9.163-2.87-7.46-9.277-16.667-17.055-24.445-7.778-7.778-16.985-14.185-24.445-17.055-3.264-1.255-6.138-1.81-8.287-1.83zm-45.758 42.22l-9.9 9.9 9.9 9.9 12.727 12.727 9.9 9.9 12.727 12.728 9.9 9.9 9.9-9.9-55.155-55.155zm-22.627 22.626L72.665 384.186l9.898 9.897 288.5-288.5-9.9-9.9zm22.627 22.63L95.29 406.808l9.9 9.902 288.5-288.5-9.9-9.9zm22.63 22.626l-288.502 288.5 9.897 9.9 288.503-288.5-9.9-9.9zM63.223 400.198l-12.12 30.306 30.393 30.394 30.305-12.12-6.61-6.612L92.46 429.44l-9.9-9.9-12.73-12.728-6.61-6.612zm-19.395 48.488l-12.993 32.478 32.478-12.992-19.486-19.485z"
+
+/** A pencil-shaped CSS cursor whose hotspot sits at the tip (bottom-left). */
+function pencilCursor(fill: string, outline: string): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 512 512'><path fill='${fill}' stroke='${outline}' stroke-width='26' stroke-linejoin='round' d='${PENCIL_PATH}'/></svg>`
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 2 26, crosshair`
+}
+
+const PEN_LIGHT = "#f8fafc"
+const PEN_DARK = "#111827"
+
+/**
+ * Pick a pencil colour that stays visible against the *canvas* background
+ * (dark ink on a light artboard, light ink on a dark one) — so strokes never
+ * vanish, e.g. white-on-white. Falls back to the app theme for transparent bg.
+ */
+function penFor(bg: string, prefersDark: boolean): string {
+  if (!bg || bg === "transparent") return prefersDark ? PEN_LIGHT : PEN_DARK
+  let h = bg.replace("#", "").trim()
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("")
+  if (h.length < 6) return prefersDark ? PEN_LIGHT : PEN_DARK
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b // perceived brightness 0..255
+  return lum > 140 ? PEN_DARK : PEN_LIGHT
+}
+
 // AI chat is disabled for now: the /api/animate route is a public, unauthed
 // proxy to Mistral with no rate limiting, so exposing it would let anyone burn
 // the API key. Flip this to true once a rate limiter + origin check are in
@@ -134,6 +188,13 @@ export function Animate({
   const [current, setCurrent] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [fps, setFps] = useState(24)
+  // Per-segment custom frame rates (empty = constant `fps` everywhere).
+  const [fpsSegments, setFpsSegments] = useState<FpsSegment[]>([])
+  const [fpsOpen, setFpsOpen] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  // Loop playback (on = restart at the end, off = stop on the last frame).
+  const [loop, setLoop] = useState(true)
+  const [tourOpen, setTourOpen] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
@@ -160,6 +221,15 @@ export function Animate({
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
+  // Pencil ink contrasts the current canvas background so strokes stay visible.
+  const { resolvedTheme } = useTheme()
+  const penColor = penFor(bgAt(bgs, current), resolvedTheme === "dark")
+  // A pencil-shaped cursor (outlined with the opposite ink for contrast).
+  const drawCursor = pencilCursor(
+    penColor,
+    penColor === PEN_LIGHT ? PEN_DARK : PEN_LIGHT
+  )
+
   const stageRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -179,7 +249,9 @@ export function Animate({
     py: number
     moved: boolean
   } | null>(null)
-  const pendingMove = useRef<{ x: number; y: number } | null>(null)
+  const pendingMove = useRef<{ x: number; y: number; shift: boolean } | null>(
+    null
+  )
   const moveRaf = useRef(0)
 
   // Latest state in refs so event handlers stay referentially stable.
@@ -191,6 +263,11 @@ export function Animate({
   const bgsRef = useRef(bgs)
   const toolRef = useRef(tool)
   const drawRef = useRef<number[] | null>(null)
+  // Refs so the rAF playback loop and stable pointer handlers see fresh values.
+  const fpsRef = useRef(fps)
+  const segmentsRef = useRef(fpsSegments)
+  const loopRef = useRef(loop)
+  const penColorRef = useRef(penColor)
   useEffect(() => {
     tracksRef.current = tracks
     framesRef.current =
@@ -211,6 +288,18 @@ export function Animate({
   useEffect(() => {
     toolRef.current = tool
   }, [tool])
+  useEffect(() => {
+    fpsRef.current = fps
+  }, [fps])
+  useEffect(() => {
+    segmentsRef.current = fpsSegments
+  }, [fpsSegments])
+  useEffect(() => {
+    loopRef.current = loop
+  }, [loop])
+  useEffect(() => {
+    penColorRef.current = penColor
+  }, [penColor])
 
   /** Update the active track's frames (accepts a value or an updater). */
   const setFrames = useCallback(
@@ -341,6 +430,25 @@ export function Animate({
     setPan({ x: 0, y: 0 })
   }, [])
 
+  /** Wipe everything back to a blank project (fresh track, defaults, no history). */
+  const resetProject = useCallback(() => {
+    setIsPlaying(false)
+    setTracks([makeTrack("Track 1")])
+    setActiveTrack(0)
+    setCurrent(0)
+    setSelectedId(null)
+    setBgs(["#ffffff"])
+    setFps(24)
+    setFpsSegments([])
+    setTool("select")
+    past.current = []
+    future.current = []
+    setCanUndo(false)
+    setCanRedo(false)
+    resetView()
+    setResetOpen(false)
+  }, [resetView])
+
   const zoomBy = useCallback((factor: number) => {
     setZoom((z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z * factor)))
   }, [])
@@ -426,6 +534,8 @@ export function Animate({
     (dir: "front" | "back") => {
       if (!selectedId) return
       snapshot()
+      const at = activeTrackRef.current
+      // 1) z-order within the active track's current frame.
       setFrames((f) => {
         const cur = Math.min(currentRef.current, f.length - 1)
         return f.map((fr, i) => {
@@ -439,6 +549,17 @@ export function Animate({
           return { ...fr, shapes: arr }
         })
       })
+      // 2) With multiple tracks, per-frame z-order isn't enough — shapes on
+      //    other tracks composite as whole layers. Raise/lower this shape's
+      //    track so it actually moves above/below them (index 0 = top layer).
+      setTracks((ts) => {
+        if (ts.length < 2) return ts
+        const t = ts[at]
+        const rest = ts.filter((_, i) => i !== at)
+        return dir === "front" ? [t, ...rest] : [...rest, t]
+      })
+      if (tracksRef.current.length >= 2)
+        setActiveTrack(dir === "front" ? 0 : tracksRef.current.length - 1)
     },
     [selectedId, snapshot, setFrames]
   )
@@ -479,7 +600,7 @@ export function Animate({
           h: Math.max(1, maxY - minY),
           points: rel,
           transparentFill: true,
-          fill: "#111827",
+          fill: penColorRef.current,
           strokeWidth: 3,
         })
       )
@@ -844,12 +965,21 @@ export function Animate({
           h = Math.max(4, rs.oh - dy)
           y = rs.oy + (rs.oh - h)
         }
+        // Shift = keep the original aspect ratio (constrain the smaller axis to
+        // the larger one), anchored at the corner opposite the handle.
+        if (pos.shift && rs.oh > 0) {
+          const ratio = rs.ow / rs.oh
+          if (w / h > ratio) h = w / ratio
+          else w = h * ratio
+          if (rs.corner.includes("w")) x = rs.ox + rs.ow - w
+          if (rs.corner.includes("n")) y = rs.oy + rs.oh - h
+        }
         patchShape(rs.id, { x, y, w, h })
       }
     }
     function move(e: PointerEvent) {
       if (!dragState.current && !resizeState.current) return
-      pendingMove.current = { x: e.clientX, y: e.clientY }
+      pendingMove.current = { x: e.clientX, y: e.clientY, shift: e.shiftKey }
       if (!moveRaf.current) moveRaf.current = requestAnimationFrame(apply)
     }
     function up() {
@@ -991,6 +1121,8 @@ export function Animate({
   ])
 
   // ── Playback: rAF with a time accumulator (no setInterval drift) ──────────
+  // Each frame is held for its own fps (custom segments override the base rate),
+  // and when loop is off playback stops on the final frame.
   useEffect(() => {
     if (!isPlaying || maxLen < 2) return
     let raf = 0
@@ -999,17 +1131,26 @@ export function Animate({
     const step = (now: number) => {
       acc += now - last
       last = now
-      const frameMs = 1000 / fps
+      const total = tracksLength(tracksRef.current)
+      const frameMs =
+        1000 / fpsAt(fpsRef.current, segmentsRef.current, currentRef.current)
       if (acc >= frameMs) {
-        const adv = Math.floor(acc / frameMs)
-        acc -= adv * frameMs
-        setCurrent((c) => (c + adv) % tracksLength(tracksRef.current))
+        acc -= frameMs
+        setCurrent((c) => {
+          const next = c + 1
+          if (next >= total) {
+            if (loopRef.current) return 0
+            setIsPlaying(false)
+            return c
+          }
+          return next
+        })
       }
       raf = requestAnimationFrame(step)
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [isPlaying, fps, maxLen])
+  }, [isPlaying, maxLen])
 
   // ── Export ─────────────────────────────────────────────────────────────────
   async function exportVideo() {
@@ -1017,7 +1158,7 @@ export function Animate({
     setIsExporting(true)
     setIsPlaying(false)
     try {
-      await exportWebm(tracksRef.current, fps, bgsRef.current)
+      await exportWebm(tracksRef.current, fps, bgsRef.current, segmentsRef.current)
     } finally {
       setIsExporting(false)
     }
@@ -1142,6 +1283,7 @@ export function Animate({
       <header className="grid grid-cols-3 items-center border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">
           <button
+            data-tour="add"
             onClick={() => setShapesOpen(true)}
             title="Insert a shape or template"
             className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background hover:opacity-90"
@@ -1153,6 +1295,8 @@ export function Animate({
             title="Pencil — draw freehand (B)"
             active={tool === "draw"}
             bordered
+            solidActive
+            dataTour="pencil"
           >
             <Pencil className="size-4" />
           </HeaderBtn>
@@ -1180,24 +1324,45 @@ export function Animate({
           <HeaderBtn onClick={resetView} title="Fit to view">
             <Maximize2 className="size-4" />
           </HeaderBtn>
+          <div className="mx-1.5 h-5 w-px bg-border" />
+          <HeaderBtn onClick={() => setResetOpen(true)} title="Reset project">
+            <RotateCcw className="size-4" />
+          </HeaderBtn>
         </div>
         <span className="justify-self-center font-mono text-xs text-muted-foreground">
           {tracks[safeActive].name} · frame{" "}
           <span className="text-foreground">{current + 1}</span> / {maxLen}
         </span>
         <div className="flex items-center justify-end gap-2">
-          <select
-            value={fps}
-            onChange={(e) => setFps(+e.target.value)}
-            className="cursor-pointer rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground outline-none"
-            title="Frame rate"
-          >
-            {FRAME_RATES.map((r) => (
-              <option key={r} value={r}>
-                {r} fps
-              </option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                data-tour="fps"
+                title="Frame rate"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground hover:bg-muted"
+              >
+                {fpsSegments.length ? "Custom fps" : `${fps} fps`}
+                <ChevronDown className="size-3 opacity-60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {FRAME_RATES.map((r) => (
+                <DropdownMenuItem
+                  key={r}
+                  onSelect={() => {
+                    setFps(r)
+                    setFpsSegments([])
+                  }}
+                >
+                  {r} fps
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setFpsOpen(true)}>
+                Custom…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <HeaderBtn
             onClick={() => setOnion((o) => !o)}
             title="Onion skin (O)"
@@ -1214,9 +1379,18 @@ export function Animate({
             <Clock className="size-4" />
           </HeaderBtn>
           <HeaderBtn
+            onClick={() => setLoop((l) => !l)}
+            title={loop ? "Loop is on" : "Loop is off"}
+            active={loop}
+            bordered
+          >
+            <Repeat className="size-4" />
+          </HeaderBtn>
+          <HeaderBtn
             onClick={() => setIsPlaying((p) => !p)}
             title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             bordered
+            dataTour="play"
           >
             {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
           </HeaderBtn>
@@ -1231,6 +1405,7 @@ export function Animate({
             </HeaderBtn>
           )}
           <button
+            data-tour="export"
             onClick={exportVideo}
             disabled={isExporting}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background disabled:opacity-50"
@@ -1278,11 +1453,13 @@ export function Animate({
               }}
               className={cn(
                 "relative overflow-hidden shadow-lg ring-1 ring-black/10",
-                tool === "draw" && "cursor-crosshair"
+                // Force the pencil cursor onto shapes too (they set cursor-move).
+                tool === "draw" && "[&_*]:cursor-[inherit]"
               )}
               style={{
                 width: CW,
                 height: CH,
+                cursor: tool === "draw" ? drawCursor : undefined,
                 backgroundColor: curBg,
                 backgroundImage: grid
                   ? "radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px)"
@@ -1348,7 +1525,7 @@ export function Animate({
                   <path
                     d={pointsToPath(drawPts)}
                     fill="none"
-                    stroke="#111827"
+                    stroke={penColor}
                     strokeWidth={3}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1369,7 +1546,10 @@ export function Animate({
         </div>
 
         {/* Right: properties (a bottom sheet on mobile) */}
-        <aside className="w-60 shrink-0 overflow-y-auto border-l border-border p-3 max-md:h-[38%] max-md:w-full max-md:border-l-0 max-md:border-t">
+        <aside
+          data-tour="properties"
+          className="w-60 shrink-0 overflow-y-auto border-l border-border p-3 max-md:h-[38%] max-md:w-full max-md:border-l-0 max-md:border-t"
+        >
           {!selected ? (
             <CanvasProperties
               bg={curBg}
@@ -1479,6 +1659,7 @@ export function Animate({
         activeTrack={safeActive}
         current={current}
         fps={fps}
+        segments={fpsSegments}
         bgs={bgs}
         tab={timelineTab}
         onTab={setTimelineTab}
@@ -1686,7 +1867,218 @@ export function Animate({
           </form>
         </div>
       )}
+
+      {/* Custom per-segment frame rates */}
+      <CustomFpsDialog
+        open={fpsOpen}
+        onOpenChange={setFpsOpen}
+        baseFps={fps}
+        totalFrames={maxLen}
+        segments={fpsSegments}
+        onApply={setFpsSegments}
+      />
+
+      {/* Reset project — same confirm pattern as the Back button */}
+      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reset the project?</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            This clears every frame, track and setting and starts you on a blank
+            canvas. This can&apos;t be undone.
+          </p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setResetOpen(false)}
+              className="cursor-pointer rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={resetProject}
+              className="cursor-pointer rounded-lg bg-destructive/15 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/25"
+            >
+              Reset project
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* First-run / on-demand guided walkthrough */}
+      <Tour open={tourOpen} onOpenChange={setTourOpen} />
     </div>
+  )
+}
+
+// ─── Custom FPS dialog ───────────────────────────────────────────────────────
+type FpsRow = { start: string; end: string; fps: string }
+
+function CustomFpsDialog({
+  open,
+  onOpenChange,
+  baseFps,
+  totalFrames,
+  segments,
+  onApply,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  baseFps: number
+  totalFrames: number
+  segments: FpsSegment[]
+  onApply: (segments: FpsSegment[]) => void
+}) {
+  const [rows, setRows] = useState<FpsRow[]>([])
+
+  // Seed the editor from the current segments each time it opens (reset-on-open
+  // during render — the React-recommended alternative to an effect).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open)
+      setRows(
+        segments.length
+          ? segments.map((s) => ({
+              start: String(s.start),
+              end: String(s.end),
+              fps: String(s.fps),
+            }))
+          : [
+              {
+                start: "1",
+                end: String(Math.max(1, totalFrames)),
+                fps: String(baseFps),
+              },
+            ]
+      )
+  }
+
+  const parsed: FpsSegment[] = rows
+    .map((r) => ({ start: +r.start, end: +r.end, fps: +r.fps }))
+    .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && Number.isFinite(s.fps))
+  const error = parsed.length ? validateSegments(parsed) : "Add at least one segment."
+
+  const setRow = (i: number, patch: Partial<FpsRow>) =>
+    setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+
+  const field =
+    "w-full rounded border border-border bg-background px-2 py-1 text-xs outline-none focus:border-foreground/40"
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Custom frame rates</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground">
+          Give frame ranges their own fps (e.g. frames 1–23 at 37, then 24–57 at
+          12). Ranges are 1-based, inclusive, and can&apos;t overlap. Frames
+          outside every segment use the base {baseFps} fps.
+        </p>
+
+        <div className="space-y-2">
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span>Start</span>
+            <span>End</span>
+            <span>FPS</span>
+            <span className="w-6" />
+          </div>
+          {rows.map((r, i) => (
+            <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={r.start}
+                onChange={(e) => setRow(i, { start: e.target.value })}
+                className={field}
+              />
+              <input
+                type="number"
+                min={1}
+                value={r.end}
+                onChange={(e) => setRow(i, { end: e.target.value })}
+                className={field}
+              />
+              <input
+                type="number"
+                min={1}
+                value={r.fps}
+                onChange={(e) => setRow(i, { fps: e.target.value })}
+                className={field}
+              />
+              <button
+                type="button"
+                onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
+                disabled={rows.length === 1}
+                className="inline-flex size-6 cursor-pointer items-center justify-center rounded border border-border text-muted-foreground hover:text-destructive disabled:opacity-30"
+                title="Remove segment"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              const last = rows[rows.length - 1]
+              const nextStart = last ? (+last.end || 0) + 1 : 1
+              setRows((rs) => [
+                ...rs,
+                { start: String(nextStart), end: String(nextStart), fps: String(baseFps) },
+              ])
+            }}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-dashed border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            <Plus className="size-3" /> Add segment
+          </button>
+        </div>
+
+        {error && <p className="text-[11px] text-destructive">{error}</p>}
+
+        <DialogFooter>
+          {segments.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                onApply([])
+                onOpenChange(false)
+              }}
+              className="mr-auto cursor-pointer rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+            >
+              Clear custom
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="cursor-pointer rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={!!error}
+            onClick={() => {
+              onApply(
+                [...parsed].sort((a, b) => a.start - b.start).map((s) => ({
+                  ...s,
+                  end: Math.round(s.end),
+                  start: Math.round(s.start),
+                  fps: Math.round(s.fps),
+                }))
+              )
+              onOpenChange(false)
+            }}
+            className="cursor-pointer rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background disabled:opacity-40"
+          >
+            Apply
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -1697,6 +2089,8 @@ function HeaderBtn({
   disabled,
   active,
   bordered,
+  solidActive,
+  dataTour,
 }: {
   children: React.ReactNode
   onClick: () => void
@@ -1704,16 +2098,23 @@ function HeaderBtn({
   disabled?: boolean
   active?: boolean
   bordered?: boolean
+  /** When active, fill with the theme's ink (black in light, white in dark). */
+  solidActive?: boolean
+  dataTour?: string
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       title={title}
+      data-tour={dataTour}
       className={cn(
         "inline-flex size-8 cursor-pointer items-center justify-center rounded-md hover:bg-muted disabled:cursor-default disabled:opacity-35",
         bordered && "border border-border",
-        active && "bg-muted"
+        active &&
+          (solidActive
+            ? "border-foreground bg-foreground text-background hover:bg-foreground"
+            : "bg-muted")
       )}
     >
       {children}

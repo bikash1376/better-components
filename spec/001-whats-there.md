@@ -1,8 +1,9 @@
 # 001 — What's there
 
 A snapshot of the current state of **Better Components**: what it is, what it
-ships, and the tech behind it. Written 2026-07-03 from `README.md`, `SPEC.md`,
-and the codebase. For the *next* round of work see [`SPEC.md`](../SPEC.md).
+ships, and the tech behind it. Written 2026-07-03, updated 2026-07-04 (Animate
+editor overhaul) from `README.md`, `SPEC.md`, and the codebase. For the *next*
+round of work see [`SPEC.md`](../SPEC.md).
 
 ---
 
@@ -92,33 +93,58 @@ the gallery, search, sidebar, and the published `registry.json` via a
 
 ## Animate — the motion editor
 
-Lives in `src/components/better/animate/` (modular: `animate.tsx`, `types.ts`,
-`render.tsx`, `export.ts`, `ai.ts`, `presets.tsx`, `timeline.tsx`,
-`properties.tsx`, `icons.tsx`, `index.tsx`). Runs entirely in the browser.
+A video-editor / motion-design / 2D-animator hybrid. Lives in
+`src/components/better/animate/` (modular: `animate.tsx`, `types.ts`,
+`render.tsx`, `export.ts`, `ai.ts`, `presets.tsx`, `text-anims.ts`,
+`timeline.tsx`, `properties.tsx`, `icons.tsx`, `index.tsx`). Runs entirely in the
+browser.
 
-- **Canvas** — fixed 800×450 artboard, 13 shape types (squares, circles, stars,
-  hearts, hexagons, lines, arrows, buttons, icons, text, images…), drag / resize
-  / rotate, textures (gradient, noise, paper, dithering), hand-drawn edges,
-  ~1,500 Phosphor icons loaded on demand.
+- **Canvas** — fixed 800×450 (16:9) artboard. Shapes are inserted from a top
+  **+ Add** modal (squares, circles, stars, hearts, hexagons, lines, arrows,
+  buttons, icons, text, images) — no more left sidebar; the canvas fills the
+  freed width. A **Pencil** tool (`B`) draws freehand strokes as real `draw`
+  shapes. Drag / resize / rotate, textures (gradient, noise, paper, dithering),
+  hand-drawn edges, ~1,500 Phosphor icons loaded on demand.
+- **Auto-keyframing (tweening)** — always on, video-editor style. Change *any*
+  animatable property on a later frame and the editor fills the in-between
+  frames: numeric props (position, size, rotation, opacity, radius, border width,
+  blur, every effect, gradient angle, texture params) lerp; colours (fill,
+  stroke, gradient, shadow, dither, **and the canvas background**) lerp
+  channel-wise; discrete props (text, texture, flips) step. Keyframes are
+  tracked **explicitly** (`Shape.key`), not inferred from value diffs, so editing
+  several properties on one frame all fill the same segment. A keyframe edit
+  fills **both** directions — tweens back to the previous keyframe and forward to
+  the next (or **holds** the new value if it's the last), so nothing snaps back.
+- **Prebuilt text animations** — select a text shape, move to a later frame, and
+  apply one of 8 presets from the properties panel (Fade in, Rise up, Drop in,
+  Woosh in, Pop, Blur in, Spin in, Typewriter). Baked as keyframes so they play
+  *and* export (`text-anims.ts`).
+- **Go to** — a clock button jumps to any second or frame, materialising the
+  active track up to it (shapes carry forward) so you can pose + tween there.
 - **Effects** — blur, drop shadow, blend modes, brightness / contrast /
-  saturation / hue / grayscale, flip; live and in exports.
+  saturation / hue / grayscale, flip; live, tweenable, and in exports.
 - **Multi-track timeline** — layered tracks (top row renders on top), each with
   its own frame sequence; shorter tracks hold their last frame. Two views:
   **Frames** (canvas thumbnails) and **Time** (second ruler + scrubbable playhead).
-- **Ergonomics** — undo / redo, copy / paste / duplicate, arrow-key nudge,
-  zoom-to-cursor + pan, onion skinning, frame context menu, canvas background +
-  grid settings.
+- **Ergonomics** — undo / redo (snapshots tracks + per-frame background),
+  copy / paste / duplicate, arrow-key nudge, zoom-to-cursor + pan, onion skinning,
+  frame context menu, per-frame canvas background + grid settings.
 - **Templates** — one-click presets (Confetti, Ripple, Bounce, Pulse, Orbit) plus
   presets that recreate library components as editable frames (Text Shimmer, Dots
   Loader, Notification, Typewriter, Marquee).
 - **AI chat** *(disabled by default — see below)* — describe an animation, a
   Mistral model plans objects + keyframes, the editor bakes them into frames at
   your fps; conversation-aware with retries and sanitized/clamped output.
-- **Export** — HD 1920×1080 WebM, all tracks composited.
+- **Export** — HD 1920×1080 WebM, all tracks composited, per-frame background.
 
 Shortcuts: `Space` play/pause · `[` `]` step · `Ctrl+Z/Y` undo/redo ·
-`Ctrl+C/V/D` copy/paste/duplicate · arrows nudge (Shift = ×10) · `O` onion skin ·
-`Del` delete · `Ctrl+scroll` zoom.
+`Ctrl+C/V/D` copy/paste/duplicate · arrows nudge (Shift = ×10) · `B` pencil ·
+`O` onion skin · `Del` delete · `Ctrl+scroll` zoom.
+
+**Data model note** — shape ids are **stable across frames** (a shape keeps one
+identity so tweening can match it), and each per-frame shape instance carries a
+`key` flag marking user-set keyframes. See `bettercomp-project.md` memory for the
+architecture.
 
 ### AI chat is off
 

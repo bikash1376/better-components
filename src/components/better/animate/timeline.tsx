@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback, useEffect, useRef } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef } from "react"
 import {
   ChevronDown,
   ChevronLeft,
@@ -17,20 +17,35 @@ import {
 import { cn } from "@/lib/utils"
 
 import { drawFrame } from "./export"
-import { type Frame, type Track, CH, CW, bgAt, tracksLength } from "./types"
+import {
+  type Frame,
+  type FpsSegment,
+  type Track,
+  CH,
+  CW,
+  bgAt,
+  fpsAt,
+  tracksLength,
+} from "./types"
 
 export type TimelineTab = "frames" | "time"
 
 const THUMB_W = 80
 const THUMB_H = 45
+// Past this many frames on a track, thumbnails shrink so the strip stays readable.
+const CROWDED_AT = 13
+const CROWDED_SCALE = 0.6
 
 /** A live canvas thumbnail of one frame. Redraws only when the frame changes. */
 const FrameThumb = memo(function FrameThumb({
   frame,
   bg,
+  scale = 1,
 }: {
   frame: Frame
   bg: string
+  /** Display scale (canvas resolution stays full for crisp thumbnails). */
+  scale?: number
 }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -52,6 +67,7 @@ const FrameThumb = memo(function FrameThumb({
       ref={ref}
       width={THUMB_W}
       height={THUMB_H}
+      style={{ width: THUMB_W * scale, height: THUMB_H * scale }}
       className="pointer-events-none rounded-[5px]"
     />
   )
@@ -66,6 +82,7 @@ export function Timeline({
   activeTrack,
   current,
   fps,
+  segments,
   bgs,
   tab,
   onTab,
@@ -83,6 +100,8 @@ export function Timeline({
   activeTrack: number
   current: number
   fps: number
+  /** Custom per-segment frame rates (empty = constant `fps`). */
+  segments: FpsSegment[]
   bgs: string[]
   tab: TimelineTab
   onTab: (t: TimelineTab) => void
@@ -110,7 +129,21 @@ export function Timeline({
   }, [current, activeTrack])
 
   const total = tracksLength(tracks)
-  const duration = total / fps
+  // Cumulative seconds at each frame boundary (honours custom fps segments).
+  // times[i] = seconds elapsed before frame i; times[total] = full duration.
+  const times = useMemo(() => {
+    const arr = [0]
+    for (let i = 0; i < total; i++)
+      arr.push(arr[i] + 1 / fpsAt(fps, segments, i))
+    return arr
+  }, [fps, segments, total])
+  const duration = times[total]
+  // x-fraction (0..1) along the frame axis for a given time in seconds.
+  const fracForSeconds = (sec: number) => {
+    let f = 0
+    while (f < total && times[f] < sec) f++
+    return total ? f / total : 0
+  }
 
   const scrubTo = useCallback(
     (clientX: number) => {
@@ -209,7 +242,7 @@ export function Timeline({
   )
 
   return (
-    <footer className="border-t border-border">
+    <footer data-tour="timeline" className="border-t border-border">
       {/* Tab bar + transport + track controls */}
       <div className="flex items-center justify-between px-3 pt-2">
         <div className="flex items-center gap-2">
@@ -260,8 +293,8 @@ export function Timeline({
           </button>
         </div>
         <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-          {formatTime(current / fps)} / {formatTime(duration)} · frame{" "}
-          <span className="text-foreground">{current + 1}</span>/{total}
+          {formatTime(times[Math.min(current, total)])} / {formatTime(duration)} ·
+          frame <span className="text-foreground">{current + 1}</span>/{total}
         </span>
       </div>
 
@@ -270,10 +303,22 @@ export function Timeline({
           ref={stripRef}
           className="max-h-44 space-y-1.5 overflow-y-auto px-3 py-2.5"
         >
-          {tracks.map((t, ti) => (
+          {tracks.map((t, ti) => {
+            // Shrink thumbnails once a track gets crowded (13+ frames).
+            const scale = t.frames.length >= CROWDED_AT ? CROWDED_SCALE : 1
+            return (
             <div key={t.id} data-track={ti} className="flex items-center gap-2">
               {trackHeader(t, ti)}
-              <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5">
+              <div
+                onWheel={(e) => {
+                  // Vertical wheel scrolls the frame strip horizontally.
+                  const el = e.currentTarget
+                  if (el.scrollWidth <= el.clientWidth) return
+                  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
+                  el.scrollLeft += e.deltaY
+                }}
+                className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5"
+              >
                 {t.frames.map((f, i) => (
                   <button
                     key={f.id}
@@ -294,7 +339,7 @@ export function Timeline({
                     )}
                     title={`${t.name} · frame ${i + 1} — right-click for options`}
                   >
-                    <FrameThumb frame={f} bg={bgAt(bgs, i)} />
+                    <FrameThumb frame={f} bg={bgAt(bgs, i)} scale={scale} />
                     <span
                       className={cn(
                         "absolute bottom-0 left-0 rounded-tr bg-background/85 px-1 font-mono text-[9px] tabular-nums",
@@ -309,7 +354,7 @@ export function Timeline({
                 ))}
                 <button
                   onClick={() => onAddFrame(ti)}
-                  style={{ width: THUMB_W / 2 + 4, height: THUMB_H + 4 }}
+                  style={{ width: (THUMB_W / 2) * scale + 4, height: THUMB_H * scale + 4 }}
                   className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                   title="Add frame (duplicates current)"
                 >
@@ -326,7 +371,8 @@ export function Timeline({
                 </button>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <div className="px-3 pb-3 pt-2">
@@ -340,7 +386,7 @@ export function Timeline({
             className="relative h-7 cursor-col-resize select-none overflow-hidden rounded-t-lg border border-b-0 border-border bg-muted/30"
           >
             {ticks.map(({ t, major }) => {
-              const left = `${Math.min(100, (t / duration) * 100)}%`
+              const left = `${Math.min(100, fracForSeconds(t) * 100)}%`
               return (
                 <div key={t} className="absolute top-0 h-full" style={{ left }}>
                   <div
@@ -409,8 +455,9 @@ export function Timeline({
             ))}
           </div>
           <p className="mt-1.5 text-[10px] text-muted-foreground">
-            Drag the ruler to scrub · tracks layer bottom-to-top · {fps} fps ·{" "}
-            {total} frames = {formatTime(duration)}
+            Drag the ruler to scrub · tracks layer bottom-to-top ·{" "}
+            {segments.length ? "custom fps" : `${fps} fps`} · {total} frames ={" "}
+            {formatTime(duration)}
           </p>
         </div>
       )}
