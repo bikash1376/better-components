@@ -40,6 +40,13 @@ export type Corner = "nw" | "ne" | "sw" | "se"
 
 export interface Shape {
   id: string
+  /**
+   * Whether this frame's instance of the shape is a user-set **keyframe**.
+   * Tweening interpolates between keyframes and fills the frames in between
+   * (which are marked `false`). Derived value-diffing can't be used because a
+   * tweened prop changes every frame — so keyframes must be tracked explicitly.
+   */
+  key: boolean
   type: ShapeType
   x: number
   y: number
@@ -160,7 +167,8 @@ export const uid = () => Math.random().toString(36).slice(2, 9)
  * renders at a time, so shared ids across frames never collide, and every edit
  * op (patch/delete/reorder) is scoped to the current frame index anyway.
  */
-export const cloneShapes = (shapes: Shape[]) => shapes.map((s) => ({ ...s }))
+export const cloneShapes = (shapes: Shape[]) =>
+  shapes.map((s) => ({ ...s, key: false }))
 
 export const emptyFrame = (): Frame => ({ id: uid(), shapes: [] })
 
@@ -234,16 +242,9 @@ export function pointsToPath(points: number[]): string {
   return d
 }
 
-/** True when any animatable (numeric or colour) prop differs → `cur` is a keyframe. */
-function isKeyframe(cur: Shape, prev: Shape): boolean {
-  for (const k of NUM_TWEEN_KEYS) if (cur[k] !== prev[k]) return true
-  for (const k of COLOR_TWEEN_KEYS) if (cur[k] !== prev[k]) return true
-  return false
-}
-
 /** Interpolate one shape between poses `a` and `b` at fraction `t` (discrete props follow `b`). */
 function interpShape(s: Shape, a: Shape, b: Shape, t: number): Shape {
-  const next = { ...s }
+  const next = { ...s, key: false } // a filled in-between frame is never a keyframe
   for (const k of NUM_TWEEN_KEYS) next[k] = a[k] + (b[k] - a[k]) * t
   for (const k of COLOR_TWEEN_KEYS) next[k] = lerpColor(a[k], b[k], t)
   return next
@@ -268,9 +269,12 @@ function prevKeyframe<T>(
 /**
  * Video-editor-style auto-keyframing. After a shape (matched by `id`) is edited
  * on frame `current` — moved, resized, rotated, recoloured, restyled — fill in
- * every frame between it and the nearest earlier keyframe (a frame where the
- * shape appears or any animatable prop changes). Frames before that keyframe and
+ * every frame between it and the nearest earlier **keyframe** (a frame flagged
+ * `key`, or where the shape first appears). Frames before that keyframe and
  * after `current` are left untouched, so only the last edited segment re-tweens.
+ * All animatable props interpolate together, so editing several props on the
+ * same frame keeps filling the whole segment (keyframes are explicit `key`
+ * flags, not value diffs — a tweened prop changes every frame).
  */
 export function tweenFrames(
   frames: Frame[],
@@ -282,7 +286,7 @@ export function tweenFrames(
   const at = (i: number) => frames[i].shapes.find((s) => s.id === id)
   const end = at(n)
   if (!end) return frames
-  const a = prevKeyframe(n, at, isKeyframe)
+  const a = prevKeyframe(n, at, (cur) => cur.key)
   if (a >= n) return frames // no gap to fill
   const start = at(a)
   if (!start) return frames
@@ -293,6 +297,50 @@ export function tweenFrames(
     return {
       ...fr,
       shapes: fr.shapes.map((s) => (s.id === id ? interpShape(s, start, end, t) : s)),
+    }
+  })
+}
+
+/**
+ * Apply a keyframe edit to shape `id` at frame `current`, filling **both**
+ * directions like a video editor:
+ *  - backward: tween from the previous keyframe up to `current`;
+ *  - forward: if there's a later keyframe, tween across to it; otherwise the
+ *    value **holds** (every following frame takes the new value) so the shape
+ *    doesn't snap back to its old pose after the edited frame.
+ */
+export function applyKeyframe(
+  frames: Frame[],
+  id: string,
+  current: number
+): Frame[] {
+  const n = Math.min(current, frames.length - 1)
+  if (n < 0) return frames
+  const held = frames[n].shapes.find((s) => s.id === id)
+  if (!held) return frames
+
+  // Backward: fill prevKeyframe..n.
+  const out = tweenFrames(frames, id, n)
+
+  // Find the next keyframe after n (stop if the shape's run ends first).
+  let nextKf = -1
+  for (let i = n + 1; i < out.length; i++) {
+    const sh = out[i].shapes.find((s) => s.id === id)
+    if (!sh) break
+    if (sh.key) {
+      nextKf = i
+      break
+    }
+  }
+
+  if (nextKf >= 0) return tweenFrames(out, id, nextKf) // forward: tween n..nextKf
+  // No later keyframe → hold the new value forward to the end of the run.
+  return out.map((fr, i) => {
+    if (i <= n) return fr
+    if (!fr.shapes.some((s) => s.id === id)) return fr
+    return {
+      ...fr,
+      shapes: fr.shapes.map((s) => (s.id === id ? { ...held, key: false } : s)),
     }
   })
 }
@@ -328,6 +376,7 @@ export function padBgs(bgs: string[], len: number): string[] {
 export function makeShape(p: Partial<Shape> & { type: ShapeType }): Shape {
   return {
     id: uid(),
+    key: true, // a freshly placed shape is a keyframe where it sits
     x: 0,
     y: 0,
     w: 80,

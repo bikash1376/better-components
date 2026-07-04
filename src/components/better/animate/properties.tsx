@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { PHOSPHOR_SUGGEST } from "./icons"
+import { TEXT_ANIMS } from "./text-anims"
 import {
   type BlendMode,
   type Shape,
@@ -134,11 +135,14 @@ export function Properties({
   onChange,
   onDelete,
   onReorder,
+  onTextAnim,
 }: {
   shape: Shape
   onChange: (patch: Partial<Shape>) => void
   onDelete: () => void
   onReorder: (dir: "front" | "back") => void
+  /** Apply a prebuilt text animation (only shown for text/button shapes). */
+  onTextAnim?: (animId: string) => void
 }) {
   const isText = s.type === "text" || s.type === "button"
   const hasFx =
@@ -394,6 +398,27 @@ export function Properties({
               </Row>
             </>
           )}
+        </Section>
+      )}
+
+      {isText && onTextAnim && (
+        <Section title="Animate">
+          <p className="mb-2 text-[10px] text-muted-foreground">
+            Move to a later frame (e.g. ~2s), then apply — it animates from where
+            the text appears to here.
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {TEXT_ANIMS.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => onTextAnim(a.id)}
+                title={a.hint}
+                className="cursor-pointer rounded-md border border-border px-2 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
         </Section>
       )}
 
