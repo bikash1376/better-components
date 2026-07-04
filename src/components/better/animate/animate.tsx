@@ -38,6 +38,7 @@ import { type AiScene, bakeScene } from "./ai"
 import { exportWebm } from "./export"
 import { imageCache } from "./icons"
 import { PRESETS } from "./presets"
+import { TEXT_ANIMS } from "./text-anims"
 import { CanvasProperties, Properties } from "./properties"
 import { ShapeView, SelectionBox } from "./render"
 import { Timeline, type TimelineTab } from "./timeline"
@@ -507,6 +508,55 @@ export function Animate({
       setGotoOpen(false)
     },
     [snapshot]
+  )
+
+  /**
+   * Apply a prebuilt text animation to the selected shape: animate it from a
+   * lead-in state (or reveal its text) across the frames between where it first
+   * appears and the current frame. Baked as keyframes so it also exports.
+   */
+  const applyTextAnim = useCallback(
+    (animId: string) => {
+      if (!selectedId) return
+      const anim = TEXT_ANIMS.find((a) => a.id === animId)
+      if (!anim) return
+      const f = framesRef.current
+      const end = Math.min(currentRef.current, f.length - 1)
+      // Start = the frame where the shape first appears.
+      let start = -1
+      for (let i = 0; i <= end; i++) {
+        if (f[i].shapes.some((s) => s.id === selectedId)) {
+          start = i
+          break
+        }
+      }
+      if (start < 0 || end <= start) return // need a later frame (go to ~2s first)
+      const final = f[end].shapes.find((s) => s.id === selectedId)
+      if (!final) return
+
+      snapshot()
+      setFrames((frames) => {
+        let next = frames.map((fr, i) => {
+          if (i < start || i > end) return fr
+          return {
+            ...fr,
+            shapes: fr.shapes.map((s) => {
+              if (s.id !== selectedId) return s
+              if (anim.reveal) {
+                const p = (i - start) / (end - start)
+                return { ...s, text: anim.reveal(final.text, p), key: i === start || i === end }
+              }
+              if (i === start) return { ...s, ...anim.from!(final), key: true }
+              if (i === end) return { ...s, key: true }
+              return { ...s, key: false } // clear holds so the tween spans start→end
+            }),
+          }
+        })
+        if (!anim.reveal) next = tweenFrames(next, selectedId, end)
+        return next
+      })
+    },
+    [selectedId, snapshot, setFrames]
   )
 
   /** The active track's frame at the (clamped) global index, read from refs. */
@@ -1330,6 +1380,7 @@ export function Animate({
               onChange={updateShape}
               onDelete={deleteShape}
               onReorder={reorder}
+              onTextAnim={applyTextAnim}
             />
           )}
         </aside>
