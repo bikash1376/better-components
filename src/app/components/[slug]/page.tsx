@@ -65,7 +65,8 @@ export default async function ComponentPage({
   if (component.fullBleed) {
     return (
       <main className="relative flex h-svh flex-col">
-        <div className="fixed left-5 top-5 z-50 flex items-center gap-2">
+        {/* In-flow top bar so it never overlaps the editor's own toolbar. */}
+        <div className="flex items-center gap-2 px-3 py-2.5">
           <Link href="/components" className={docsLinkClass}>
             <ArrowLeft className="size-4" />
             Back
@@ -75,7 +76,7 @@ export default async function ComponentPage({
             Docs
           </Link>
         </div>
-        <div className="min-h-0 flex-1 p-3">
+        <div className="min-h-0 flex-1 px-3 pb-3">
           <component.Demo />
         </div>
       </main>
