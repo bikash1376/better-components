@@ -24,14 +24,17 @@ export function InstallCommand({ command, className }: InstallCommandProps) {
       onClick={copy}
       aria-label="Copy install command"
       className={cn(
-        "group inline-flex cursor-pointer items-center gap-3 rounded-xl bg-neutral-900 px-4 py-2.5",
+        "group inline-flex max-w-full cursor-pointer items-center gap-3 rounded-xl bg-neutral-900 px-4 py-2.5",
         "font-mono text-xs text-neutral-100 transition-colors hover:bg-neutral-800",
         "sm:text-sm",
         className
       )}
     >
-      <span className="whitespace-nowrap">{command}</span>
-      <span className="text-neutral-400 transition-colors group-hover:text-neutral-100">
+      {/* Scrolls inside the pill on a narrow screen rather than overflowing it. */}
+      <span className="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {command}
+      </span>
+      <span className="shrink-0 text-neutral-400 transition-colors group-hover:text-neutral-100">
         {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
       </span>
     </button>

@@ -22,7 +22,7 @@ export default function ComponentsPage() {
   }))
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-6 pb-16 pt-24">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-24 sm:px-6">
       <SiteChrome items={searchItems} repoUrl={REPO_URL} />
 
       <div className="mb-12">

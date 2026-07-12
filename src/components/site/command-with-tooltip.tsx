@@ -24,7 +24,8 @@ export function CommandWithTooltip({
 
   return (
     <div
-      className="inline-block"
+      // min-w-0 so the badge can shrink inside the top bar's flex row.
+      className="min-w-0"
       onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
       onMouseLeave={() => setPos(null)}
     >
