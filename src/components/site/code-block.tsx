@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { Highlight, type PrismTheme } from "prism-react-renderer"
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
-import { useIcons } from "@/components/site/icons"
 
 /**
  * A Prism theme whose colours are CSS variables, so a single theme adapts to
@@ -41,7 +41,6 @@ export function CodeBlock({
   copy = true,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
-  const { icons } = useIcons()
 
   async function onCopy() {
     await navigator.clipboard.writeText(code)
@@ -58,9 +57,9 @@ export function CodeBlock({
           className="absolute right-2 top-2 z-10 inline-flex size-7 cursor-pointer items-center justify-center rounded-md border border-border/60 bg-background/70 text-muted-foreground opacity-0 backdrop-blur transition-opacity hover:text-foreground group-hover:opacity-100"
         >
           {copied ? (
-            <icons.check className="size-3.5" />
+            <CheckIcon className="size-3.5" />
           ) : (
-            <icons.copy className="size-3.5" />
+            <CopyIcon className="size-3.5" />
           )}
         </button>
       )}

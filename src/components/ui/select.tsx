@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
-import { Check, ChevronDown } from "lucide-react"
+import { CheckIcon, CaretDownIcon } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -32,7 +32,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="size-3.5 opacity-60" />
+        <CaretDownIcon className="size-3.5 opacity-60" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -88,7 +88,7 @@ function SelectItem({
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check className="size-3.5" />
+          <CheckIcon className="size-3.5" />
         </SelectPrimitive.ItemIndicator>
       </span>
     </SelectPrimitive.Item>

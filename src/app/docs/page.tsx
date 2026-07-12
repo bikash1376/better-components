@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react/ssr"
 
 import { CodeBlock } from "@/components/site/code-block"
 import { REGISTRY_URL, installCommand } from "@/lib/registry"
@@ -66,7 +66,7 @@ export default function DocsPage() {
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeftIcon className="size-4" />
           Home
         </Link>
         <Link
@@ -74,7 +74,7 @@ export default function DocsPage() {
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           Browse components
-          <ArrowRight className="size-4" />
+          <ArrowRightIcon className="size-4" />
         </Link>
       </div>
 
@@ -181,7 +181,7 @@ export function Example() {
             className="inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
           >
             Explore components
-            <ArrowRight className="size-4" />
+            <ArrowRightIcon className="size-4" />
           </Link>
         </Section>
       </div>

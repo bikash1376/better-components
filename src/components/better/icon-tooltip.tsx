@@ -48,29 +48,30 @@ export function IconTooltip({
 }: IconTooltipProps) {
   const [open, setOpen] = useState(false)
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  function clearTimers() {
-    if (showTimer.current) clearTimeout(showTimer.current)
-    if (hideTimer.current) clearTimeout(hideTimer.current)
-  }
 
   function show() {
-    clearTimers()
-    showTimer.current = setTimeout(() => {
-      setOpen(true)
-      // Auto-hide after `duration`, even if still hovered.
-      if (duration > 0) {
-        hideTimer.current = setTimeout(() => setOpen(false), duration)
-      }
-    }, delay)
+    if (showTimer.current) clearTimeout(showTimer.current)
+    showTimer.current = setTimeout(() => setOpen(true), delay)
   }
   function hide() {
-    clearTimers()
+    if (showTimer.current) clearTimeout(showTimer.current)
     setOpen(false)
   }
 
-  useEffect(() => clearTimers, [])
+  // Auto-hide once shown, even if the pointer is still over the button. Keyed
+  // on `open` so the countdown restarts with each reveal, and on `duration` so
+  // dragging the control re-arms it instead of using a stale value.
+  useEffect(() => {
+    if (!open || duration <= 0) return
+    const id = setTimeout(() => setOpen(false), duration)
+    return () => clearTimeout(id)
+  }, [open, duration])
+
+  useEffect(() => {
+    return () => {
+      if (showTimer.current) clearTimeout(showTimer.current)
+    }
+  }, [])
 
   const offset = OFFSET[side]
 

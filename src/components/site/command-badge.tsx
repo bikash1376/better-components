@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
-import { useIcons } from "@/components/site/icons"
 
 interface CommandBadgeProps {
   command: string
@@ -13,7 +13,6 @@ interface CommandBadgeProps {
 /** Small inline install command with a little copy button at the end. */
 export function CommandBadge({ command, className }: CommandBadgeProps) {
   const [copied, setCopied] = useState(false)
-  const { icons } = useIcons()
 
   async function copy() {
     await navigator.clipboard.writeText(command)
@@ -24,7 +23,8 @@ export function CommandBadge({ command, className }: CommandBadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg border border-border bg-muted/50 py-1 pl-3 pr-1",
+        // h-9 matches the other controls in the top bar.
+        "inline-flex h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/70 py-1 pl-3 pr-1 shadow-sm backdrop-blur-md",
         "font-mono text-xs text-muted-foreground",
         className
       )}
@@ -35,11 +35,7 @@ export function CommandBadge({ command, className }: CommandBadgeProps) {
         aria-label="Copy command"
         className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        {copied ? (
-          <icons.check className="size-3.5" />
-        ) : (
-          <icons.copy className="size-3.5" />
-        )}
+        {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
       </button>
     </div>
   )

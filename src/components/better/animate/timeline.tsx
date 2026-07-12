@@ -2,17 +2,17 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef } from "react"
 import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Eye,
-  EyeOff,
-  Film,
-  Plus,
-  Timer,
-  Trash2,
-} from "lucide-react"
+  CaretDownIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  CaretUpIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  FilmStripIcon,
+  PlusIcon,
+  TimerIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -202,7 +202,7 @@ export function Timeline({
         className="cursor-pointer text-muted-foreground hover:text-foreground"
         title={t.visible ? "Hide track" : "Show track"}
       >
-        {t.visible ? <Eye className="size-3" /> : <EyeOff className="size-3" />}
+        {t.visible ? <EyeIcon className="size-3" /> : <EyeSlashIcon className="size-3" />}
       </button>
       <span className="flex flex-col">
         <button
@@ -214,7 +214,7 @@ export function Timeline({
           className="cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-25"
           title="Move up (renders above)"
         >
-          <ChevronUp className="size-3" />
+          <CaretUpIcon className="size-3" />
         </button>
         <button
           onClick={(e) => {
@@ -225,7 +225,7 @@ export function Timeline({
           className="cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-25"
           title="Move down (renders below)"
         >
-          <ChevronDown className="size-3" />
+          <CaretDownIcon className="size-3" />
         </button>
       </span>
       <button
@@ -236,7 +236,7 @@ export function Timeline({
         className="cursor-pointer text-muted-foreground hover:text-destructive"
         title="Delete track"
       >
-        <Trash2 className="size-3" />
+        <TrashIcon className="size-3" />
       </button>
     </div>
   )
@@ -256,7 +256,7 @@ export function Timeline({
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Film className="size-3" /> Frames
+              <FilmStripIcon className="size-3" /> Frames
             </button>
             <button
               onClick={() => onTab("time")}
@@ -267,7 +267,7 @@ export function Timeline({
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Timer className="size-3" /> Time
+              <TimerIcon className="size-3" /> Time
             </button>
           </div>
           <button
@@ -275,21 +275,21 @@ export function Timeline({
             className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md border border-border hover:bg-muted"
             title="Previous frame ["
           >
-            <ChevronLeft className="size-3.5" />
+            <CaretLeftIcon className="size-3.5" />
           </button>
           <button
             onClick={() => onSelect(Math.min(total - 1, current + 1))}
             className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md border border-border hover:bg-muted"
             title="Next frame ]"
           >
-            <ChevronRight className="size-3.5" />
+            <CaretRightIcon className="size-3.5" />
           </button>
           <button
             onClick={onAddTrack}
             className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
             title="Add a track — tracks layer on top of each other"
           >
-            <Plus className="size-3" /> Track
+            <PlusIcon className="size-3" /> Track
           </button>
         </div>
         <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -358,7 +358,7 @@ export function Timeline({
                   className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                   title="Add frame (duplicates current)"
                 >
-                  <Plus className="size-4" />
+                  <PlusIcon className="size-4" />
                 </button>
               </div>
               {ti === activeTrack && (
@@ -367,7 +367,7 @@ export function Timeline({
                   className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                   title="Delete current frame"
                 >
-                  <Trash2 className="size-3.5" />
+                  <TrashIcon className="size-3.5" />
                 </button>
               )}
             </div>

@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
-  ChevronDown,
-  FlipHorizontal2,
-  FlipVertical2,
-  RotateCcw,
-  Trash2,
-} from "lucide-react"
+  CaretDownIcon,
+  FlipHorizontalIcon,
+  FlipVerticalIcon,
+  ArrowCounterClockwiseIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -71,7 +71,7 @@ function Section({
         className="flex w-full cursor-pointer items-center justify-between py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
       >
         {title}
-        <ChevronDown
+        <CaretDownIcon
           className={cn(
             "size-3 opacity-60 transition-transform",
             !open && "-rotate-90"
@@ -211,7 +211,7 @@ export function Properties({
             )}
             title="Flip horizontal"
           >
-            <FlipHorizontal2 className="size-3.5" />
+            <FlipHorizontalIcon className="size-3.5" />
           </button>
           <button
             onClick={() => onChange({ flipY: !s.flipY })}
@@ -221,14 +221,14 @@ export function Properties({
             )}
             title="Flip vertical"
           >
-            <FlipVertical2 className="size-3.5" />
+            <FlipVerticalIcon className="size-3.5" />
           </button>
           <button
             onClick={onDelete}
             className="cursor-pointer rounded border border-border p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
             title="Delete shape (Del)"
           >
-            <Trash2 className="size-3.5" />
+            <TrashIcon className="size-3.5" />
           </button>
         </div>
       </div>
@@ -561,7 +561,7 @@ export function Properties({
             className="inline-flex cursor-pointer items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
             title="Reset all effects"
           >
-            <RotateCcw className="size-3" /> Reset
+            <ArrowCounterClockwiseIcon className="size-3" /> Reset
           </button>
         </div>
         <Select

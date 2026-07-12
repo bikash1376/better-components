@@ -17,12 +17,25 @@ interface Cell {
 }
 
 interface InfiniteCanvasProps {
-  /** Tiles laid across the infinite grid; picked deterministically per cell. */
+  /**
+   * The pool of tiles the grid draws from — ANY ReactNode works: icons,
+   * images, avatars, text, whole cards. Pass as few or as many as you like;
+   * every cell picks one by hashing its coordinates, so the same cell always
+   * shows the same tile and neighbours differ. The grid is endless regardless
+   * of how many you pass — the items repeat, not the layout.
+   */
   items: ReactNode[]
   className?: string
-  /** Size of each grid cell in px. */
+  /** Size of each grid cell (the spacing) in px. */
   cellSize?: number
-  /** Extra ring of cells kept mounted just outside the viewport. */
+  /** Size of the tile drawn inside each cell, in px. Must be ≤ cellSize. */
+  tileSize?: number
+  /**
+   * Extra ring of cells mounted just outside the viewport. Purely a
+   * smoothness/perf trade: higher values pre-mount cells so they're already
+   * there when you drag (no pop-in at the edges) at the cost of more DOM.
+   * You won't see a difference standing still — only while panning.
+   */
   overscan?: number
 }
 
@@ -42,6 +55,7 @@ export function InfiniteCanvas({
   items,
   className,
   cellSize = 88,
+  tileSize = 56,
   overscan = 1,
 }: InfiniteCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -155,8 +169,11 @@ export function InfiniteCanvas({
                 height: cellSize,
               }}
             >
-              <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm">
-                {items[pick(col, row, items.length)]}
+              <div
+                style={{ width: tileSize, height: tileSize }}
+                className="flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-sm"
+              >
+                {items.length ? items[pick(col, row, items.length)] : null}
               </div>
             </motion.div>
           ))}
