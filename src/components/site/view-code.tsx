@@ -37,7 +37,7 @@ export function ViewCode({ code, usage, githubUrl }: ViewCodeProps) {
         onClick={() => setOpen(true)}
         aria-label="View code"
         title="View code"
-        className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-border bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border/60 bg-background/70 text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:bg-muted hover:text-foreground"
       >
         <CodeIcon className="size-4" />
       </button>

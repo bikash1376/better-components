@@ -1,27 +1,30 @@
+"use client"
+
 import Link from "next/link"
+import { GrainGradient } from "@paper-design/shaders-react"
 
 import { Button } from "@/components/ui/button"
 import { InstallCommand } from "@/components/site/install-command"
 
 /**
- * Landing hero — a prismatic aurora burst behind the title. Static: no scroll
- * container, no zoom, nothing that reacts to the wheel.
+ * Landing hero — an animated grain-gradient shader (paper.design) behind the
+ * title. Static layout: no scroll container, no zoom, nothing that reacts to
+ * the wheel.
  */
 export function LandingHero() {
   return (
     <div className="relative min-h-svh w-full bg-black">
-      {/* Prismatic Aurora Burst — layered radial gradients over black. */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background: `
-            radial-gradient(ellipse 120% 80% at 70% 20%, rgba(255, 20, 147, 0.15), transparent 50%),
-            radial-gradient(ellipse 100% 60% at 30% 10%, rgba(0, 255, 255, 0.12), transparent 60%),
-            radial-gradient(ellipse 90% 70% at 50% 0%, rgba(138, 43, 226, 0.18), transparent 65%),
-            radial-gradient(ellipse 110% 50% at 80% 30%, rgba(255, 215, 0, 0.08), transparent 40%),
-            #000000
-          `,
-        }}
+      {/* Animated backdrop. `speed` drives it — set 0 to freeze. It paints to a
+          canvas, so it sits under the content and ignores pointer events. */}
+      <GrainGradient
+        colors={["#ff1493", "#00ffff", "#8a2be2", "#ffd700"]}
+        colorBack="#000000"
+        softness={0.8}
+        intensity={0.35}
+        noise={0.3}
+        shape="corners"
+        speed={0.6}
+        className="pointer-events-none absolute inset-0 z-0 size-full"
       />
 
       <section className="relative z-10 flex min-h-svh flex-col items-center justify-center px-6 py-8 text-center">

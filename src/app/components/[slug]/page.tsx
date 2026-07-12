@@ -1,9 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { BookOpenIcon } from "@phosphor-icons/react/ssr"
 
 import { cn } from "@/lib/utils"
 import { installCommand } from "@/lib/registry"
@@ -19,9 +17,6 @@ import {
   getComponent,
   visibleComponents,
 } from "@/registry"
-
-const docsLinkClass =
-  "inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-3 py-1.5 text-sm text-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted"
 
 export function generateStaticParams() {
   return components.map((c) => ({ slug: c.slug }))
@@ -78,13 +73,17 @@ export default async function ComponentPage({
   }
 
   return (
-    <main className="relative flex min-h-svh flex-1 flex-col px-6 py-16">
-      <SiteChrome items={searchItems} current={slug} repoUrl={REPO_URL} />
-
-      <Link href="/docs" className={cn(docsLinkClass, "fixed left-6 top-6 z-40")}>
-        <BookOpenIcon className="size-4" />
-        Docs
-      </Link>
+    <main className="relative flex min-h-svh flex-1 flex-col px-6 pb-16 pt-24">
+      {/* The install command rides in the top bar's centre slot, so it lines up
+          with Docs and the search/menu buttons instead of sitting below them. */}
+      <SiteChrome items={searchItems} current={slug} repoUrl={REPO_URL}>
+        <CommandWithTooltip
+          command={installCommand(slug)}
+          name={component.name}
+          description={component.description}
+        />
+        <ViewCode code={code} usage={component.usage} githubUrl={githubUrl} />
+      </SiteChrome>
 
       <div
         className={cn(
@@ -92,25 +91,10 @@ export default async function ComponentPage({
           component.playground ? "max-w-5xl" : "max-w-4xl"
         )}
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <CommandWithTooltip
-            command={installCommand(slug)}
-            name={component.name}
-            description={component.description}
-          />
-          <ViewCode
-            code={code}
-            usage={component.usage}
-            githubUrl={githubUrl}
-          />
-        </div>
-
         {component.playground ? (
-          <div className="mt-4">
-            <ComponentPlayground slug={slug} />
-          </div>
+          <ComponentPlayground slug={slug} />
         ) : (
-          <div className="mt-4 flex min-h-[440px] w-full items-center justify-center rounded-2xl border border-border bg-muted/20">
+          <div className="flex min-h-[440px] w-full items-center justify-center rounded-2xl border border-border bg-muted/20">
             <component.Demo />
           </div>
         )}

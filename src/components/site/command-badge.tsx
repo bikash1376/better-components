@@ -23,7 +23,8 @@ export function CommandBadge({ command, className }: CommandBadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg border border-border bg-muted/50 py-1 pl-3 pr-1",
+        // h-9 matches the other controls in the top bar.
+        "inline-flex h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/70 py-1 pl-3 pr-1 shadow-sm backdrop-blur-md",
         "font-mono text-xs text-muted-foreground",
         className
       )}

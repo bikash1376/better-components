@@ -1,149 +1,99 @@
 "use client"
 
-import { useId, type ReactNode } from "react"
+import type { ReactNode } from "react"
+import { PaperTexture } from "@paper-design/shaders-react"
 
 import { cn } from "@/lib/utils"
-
-type Edge = "straight" | "handdrawn" | "torn" | "cutout"
 
 interface PaperProps {
   children?: ReactNode
   className?: string
-  /** Base paper colour. */
+  /**
+   * Optional source image. With one, the texture becomes a filter over the
+   * photo (creased, printed-on-paper look); without one, it's a plain paper
+   * surface in `color` / `colorFront`.
+   */
+  image?: string
+  /** Base paper colour (the "back" of the texture). */
   color?: string
-  /** Speckled grain intensity, 0–1. */
-  grain?: number
-  /** Directional fibre streaks, 0–1. */
-  fibers?: number
-  /** Depth of the emboss, light, and drop shadow, 0–1. */
-  strength?: number
-  /** Corner radius in px (used when edge is straight/handdrawn). */
+  /** Colour of the texture's ink/shadow detail. */
+  colorFront?: string
+  /** Sharpness of the light-to-dark transitions, 0–1. */
+  contrast?: number
+  /** Fine pixel grain, 0–1. */
+  roughness?: number
+  /** Curly fibre noise, 0–1. */
+  fiber?: number
+  /** Scale of the fibre noise, 0–1. */
+  fiberSize?: number
+  /** Cell-based crumple intensity, 0–1. */
+  crumples?: number
+  /** Scale of the crumple cells, 0–1. */
+  crumpleSize?: number
+  /** Depth of the folds, 0–1. */
+  folds?: number
+  /** How many folds, 1–15. */
+  foldCount?: number
+  /** Large-scale noise mask over the whole pattern, 0–1. */
+  fade?: number
+  /** Speckles, 0–1. */
+  drops?: number
+  /** Changes the random layout of folds, crumples, and drops. 0–1000. */
+  seed?: number
+  /** Corner radius in px. */
   radius?: number
-  /** Edge treatment. */
-  edge?: Edge
-  /** Extra edge distortion added on top of the edge preset. */
-  distort?: number
-}
-
-/** feTurbulence + feDisplacementMap presets that rough up the paper's outline. */
-const EDGE: Record<Edge, { freq: string; scale: number } | null> = {
-  straight: null,
-  handdrawn: { freq: "0.02", scale: 4 },
-  torn: { freq: "0.014", scale: 11 },
-  cutout: { freq: "0.05", scale: 6 },
 }
 
 /**
- * Paper — a textured paper surface. A speckled fractal-noise grain plus
- * directional fibres over a warm base, with a soft top light, embossed edges,
- * and a lift shadow. `edge` roughens the outline (hand-drawn, torn, or cutout)
- * by displacing the surface with noise. All SVG filters, no images.
+ * Paper — a realistic paper surface rendered on the GPU by the paper.design
+ * PaperTexture shader: fibres, crumples, folds, speckles, and grain. Pass an
+ * `image` to run the texture over a photo instead of a flat colour.
  * Category: UI. Part of the Better Component library.
  */
 export function Paper({
   children,
   className,
+  image,
   color = "#f4efe4",
-  grain = 0.4,
-  fibers = 0.25,
-  strength = 0.6,
+  colorFront = "#9fadbc",
+  contrast = 0.3,
+  roughness = 0.4,
+  fiber = 0.3,
+  fiberSize = 0.2,
+  crumples = 0.3,
+  crumpleSize = 0.35,
+  folds = 0.65,
+  foldCount = 5,
+  fade = 0,
+  drops = 0.2,
+  seed = 5.8,
   radius = 16,
-  edge = "straight",
-  distort = 0,
 }: PaperProps) {
-  const id = useId()
-  const edgePreset = EDGE[edge]
-  const ragged = edge === "torn" || edge === "cutout"
-
   return (
-    <div className={cn("relative", className)}>
-      {/* Hidden filter defs. */}
-      <svg aria-hidden width={0} height={0} className="absolute">
-        <defs>
-          {edgePreset && (
-            <filter id={`edge-${id}`}>
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency={edgePreset.freq}
-                numOctaves="2"
-                result="e"
-              />
-              <feDisplacementMap
-                in="SourceGraphic"
-                in2="e"
-                scale={edgePreset.scale + distort}
-                xChannelSelector="R"
-                yChannelSelector="G"
-              />
-            </filter>
-          )}
-        </defs>
-      </svg>
+    <div
+      className={cn("relative overflow-hidden", className)}
+      style={{ borderRadius: radius }}
+    >
+      <PaperTexture
+        image={image}
+        colorBack={color}
+        colorFront={colorFront}
+        contrast={contrast}
+        roughness={roughness}
+        fiber={fiber}
+        fiberSize={fiberSize}
+        crumples={crumples}
+        crumpleSize={crumpleSize}
+        folds={folds}
+        foldCount={foldCount}
+        fade={fade}
+        drops={drops}
+        seed={seed}
+        fit="cover"
+        className="pointer-events-none absolute inset-0 size-full"
+      />
 
-      {/* Textured surface (displaced as one layer, so grain + edge move together). */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: color,
-          borderRadius: ragged ? 0 : radius,
-          filter: edgePreset ? `url(#edge-${id})` : undefined,
-          boxShadow: [
-            `inset 0 1px 1px rgba(255,255,255,${0.6 * strength})`,
-            `inset 0 -1px 2px rgba(0,0,0,${0.14 * strength})`,
-            `0 ${10 * strength}px ${28 * strength}px -10px rgba(0,0,0,${0.3 * strength})`,
-          ].join(", "),
-        }}
-      >
-        {/* Speckled grain. */}
-        <svg
-          aria-hidden
-          className="absolute inset-0 size-full mix-blend-multiply"
-          style={{ opacity: grain }}
-        >
-          <filter id={`grain-${id}`}>
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.9"
-              numOctaves="2"
-              stitchTiles="stitch"
-              result="n"
-            />
-            <feColorMatrix in="n" type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter={`url(#grain-${id})`} />
-        </svg>
-
-        {/* Directional fibres. */}
-        <svg
-          aria-hidden
-          className="absolute inset-0 size-full mix-blend-multiply"
-          style={{ opacity: fibers }}
-        >
-          <filter id={`fiber-${id}`}>
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.008 0.4"
-              numOctaves="2"
-              stitchTiles="stitch"
-              result="f"
-            />
-            <feColorMatrix in="f" type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter={`url(#fiber-${id})`} />
-        </svg>
-
-        {/* Soft top light. */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,${
-              0.4 * strength
-            }), transparent 60%)`,
-          }}
-        />
-      </div>
-
-      <div className="relative">{children}</div>
+      <div className="relative size-full">{children}</div>
     </div>
   )
 }

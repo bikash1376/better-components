@@ -727,26 +727,30 @@ export function Example() {
     category: "UI",
     playground: true,
     description:
-      "A textured paper surface — fractal-noise grain, soft light, and emboss.",
+      "A GPU paper surface — fibres, crumples, folds, and grain. Run it over a photo, or on its own.",
     sourcePath: "src/components/better/paper.tsx",
     usage: `import { Paper } from "@/components/better/paper"
 
 export function Example() {
   return (
-    <Paper grain={0.4} fibers={0.25} edge="torn" className="h-48 w-72">
-      <div className="p-6 text-neutral-800">Paper</div>
-    </Paper>
+    <>
+      {/* A plain paper surface. */}
+      <Paper folds={0.65} crumples={0.3} fiber={0.3} className="h-48 w-72 p-6">
+        <span className="text-neutral-800">Paper</span>
+      </Paper>
+
+      {/* Or run the texture over a photo — creased, printed-on-paper look. */}
+      <Paper image="/photo.jpg" folds={0.8} className="h-48 w-72" />
+    </>
   )
 }`,
     Demo: () => (
       <Paper
-        grain={0.4}
-        fibers={0.25}
-        strength={0.6}
-        className="flex h-44 w-64 items-center justify-center"
-      >
-        <span className="text-xl font-medium text-neutral-800">Paper</span>
-      </Paper>
+        image="/hero_image.jpg"
+        folds={0.7}
+        crumples={0.35}
+        className="h-44 w-64"
+      />
     ),
     Poster: () => (
       <div className="flex h-44 w-64 items-center justify-center rounded-2xl bg-[#f4efe4] shadow-lg">

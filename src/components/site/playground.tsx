@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import {
   BellIcon,
   CaretDownIcon,
@@ -11,7 +11,9 @@ import {
   HouseIcon,
   MagnifyingGlassIcon,
   StarIcon,
+  UploadSimpleIcon,
   UserIcon,
+  XIcon,
 } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
@@ -39,10 +41,10 @@ import { Paper } from "@/components/better/paper"
 /* Control schema                                                     */
 /* ----------------------------------------------------------------- */
 
-type Value = string | number | boolean
+type Value = string | number | boolean | string[]
 export type Values = Record<string, Value>
 
-type Control =
+type ControlKind =
   | {
       type: "select"
       prop: string
@@ -63,6 +65,21 @@ type Control =
   | { type: "boolean"; prop: string; label: string; default: boolean }
   | { type: "text"; prop: string; label: string; default: string }
   | { type: "color"; prop: string; label: string; default: string }
+  /** Upload a single image; `default` is the src shown until one is picked. */
+  | { type: "image"; prop: string; label: string; default: string }
+  /** Upload a sequence of images (a flipbook needs at least a few). */
+  | {
+      type: "images"
+      prop: string
+      label: string
+      min: number
+      max: number
+      default: string[]
+      hint?: string
+    }
+
+/** `showIf` hides a control until another control makes it relevant. */
+type Control = ControlKind & { showIf?: (v: Values) => boolean }
 
 interface PlaygroundConfig {
   controls: Control[]
@@ -112,6 +129,10 @@ const BALL_FRAMES = [
   "/flipbook/ball-2.svg",
   "/flipbook/ball-3.svg",
 ]
+
+/** Fewer than 3 frames isn't a flipbook; past 12 the cycle is a slideshow. */
+const FLIPBOOK_MIN_FRAMES = 3
+const FLIPBOOK_MAX_FRAMES = 12
 
 /* ----------------------------------------------------------------- */
 /* Per-component playground configs                                   */
@@ -581,6 +602,16 @@ export function Example() {
           { label: "Images", value: "images" },
         ],
       },
+      {
+        type: "images",
+        prop: "images",
+        label: "Your frames",
+        min: FLIPBOOK_MIN_FRAMES,
+        max: FLIPBOOK_MAX_FRAMES,
+        default: BALL_FRAMES,
+        hint: "square",
+        showIf: (v) => v.frames === "images",
+      },
       // Images are drawn into a square box, so one number sizes both sides.
       { type: "number", prop: "size", label: "Size", min: 48, max: 200, step: 4, default: 96, hint: "px" },
       { type: "number", prop: "fps", label: "FPS", min: 1, max: 8, default: 4 },
@@ -589,8 +620,8 @@ export function Example() {
     render: (v) =>
       v.frames === "images" ? (
         <Flipbook
-          images={BALL_FRAMES}
-          alt="A bouncing ball"
+          images={v.images as string[]}
+          alt="Flipbook frames"
           size={v.size as number}
           fps={v.fps as number}
           jitter={v.jitter as boolean}
@@ -611,7 +642,11 @@ export function Example() {
 
 // Every image must have the SAME width and height (a square source) — frames
 // are drawn into a square size×size box, so a mismatched aspect ratio crops.
-const frames = ["/flipbook/ball-1.svg", "/flipbook/ball-2.svg", "/flipbook/ball-3.svg"]
+const frames = [
+${(v.images as string[])
+  .map((src) => `  "${src.startsWith("blob:") ? "/your-frame.png" : src}",`)
+  .join("\n")}
+]
 
 export function Example() {
   return (
@@ -710,37 +745,46 @@ export function Example() {
 
   paper: {
     controls: [
-      { type: "color", prop: "color", label: "Color", default: "#f4efe4" },
-      { type: "number", prop: "grain", label: "Grain", min: 0, max: 1, step: 0.05, default: 0.4 },
-      { type: "number", prop: "fibers", label: "Fibers", min: 0, max: 1, step: 0.05, default: 0.25 },
-      { type: "number", prop: "strength", label: "Strength", min: 0, max: 1, step: 0.05, default: 0.6 },
-      {
-        type: "select",
-        prop: "edge",
-        label: "Edge",
-        default: "straight",
-        options: [
-          { label: "Straight", value: "straight" },
-          { label: "Hand-drawn", value: "handdrawn" },
-          { label: "Torn", value: "torn" },
-          { label: "Cutout", value: "cutout" },
-        ],
-      },
-      { type: "number", prop: "distort", label: "Distort", min: 0, max: 12, default: 0, hint: "px" },
+      // Same photo the Magnetic Card uses, until you upload your own.
+      { type: "image", prop: "image", label: "Image", default: "/hero_image.jpg" },
+      { type: "boolean", prop: "useImage", label: "Use image", default: true },
+      { type: "color", prop: "color", label: "Back", default: "#f4efe4" },
+      { type: "color", prop: "colorFront", label: "Front", default: "#9fadbc" },
+      { type: "number", prop: "contrast", label: "Contrast", min: 0, max: 1, step: 0.05, default: 0.3 },
+      { type: "number", prop: "roughness", label: "Roughness", min: 0, max: 1, step: 0.05, default: 0.4 },
+      { type: "number", prop: "fiber", label: "Fiber", min: 0, max: 1, step: 0.05, default: 0.3 },
+      { type: "number", prop: "fiberSize", label: "Fiber size", min: 0, max: 1, step: 0.05, default: 0.2 },
+      { type: "number", prop: "crumples", label: "Crumples", min: 0, max: 1, step: 0.05, default: 0.3 },
+      { type: "number", prop: "crumpleSize", label: "Crumple size", min: 0, max: 1, step: 0.05, default: 0.35 },
+      { type: "number", prop: "folds", label: "Folds", min: 0, max: 1, step: 0.05, default: 0.65 },
+      { type: "number", prop: "foldCount", label: "Fold count", min: 1, max: 15, default: 5 },
+      { type: "number", prop: "drops", label: "Drops", min: 0, max: 1, step: 0.05, default: 0.2 },
+      { type: "number", prop: "fade", label: "Fade", min: 0, max: 1, step: 0.05, default: 0 },
+      { type: "number", prop: "seed", label: "Seed", min: 0, max: 1000, default: 6 },
       { type: "number", prop: "radius", label: "Radius", min: 0, max: 40, default: 16, hint: "px" },
     ],
     render: (v) => (
       <Paper
+        image={v.useImage ? String(v.image) : undefined}
         color={String(v.color)}
-        grain={v.grain as number}
-        fibers={v.fibers as number}
-        strength={v.strength as number}
-        edge={v.edge as "straight" | "handdrawn" | "torn" | "cutout"}
-        distort={v.distort as number}
+        colorFront={String(v.colorFront)}
+        contrast={v.contrast as number}
+        roughness={v.roughness as number}
+        fiber={v.fiber as number}
+        fiberSize={v.fiberSize as number}
+        crumples={v.crumples as number}
+        crumpleSize={v.crumpleSize as number}
+        folds={v.folds as number}
+        foldCount={v.foldCount as number}
+        drops={v.drops as number}
+        fade={v.fade as number}
+        seed={v.seed as number}
         radius={v.radius as number}
-        className="flex h-48 w-72 items-center justify-center"
+        className="flex h-56 w-80 items-end justify-start p-4"
       >
-        <span className="text-xl font-medium text-neutral-800">Paper</span>
+        {!v.useImage && (
+          <span className="text-xl font-medium text-neutral-800">Paper</span>
+        )}
       </Paper>
     ),
     code: (v) =>
@@ -748,18 +792,23 @@ export function Example() {
 
 export function Example() {
   return (
-    <Paper
+    <Paper${v.useImage ? `\n      image="/photo.jpg"` : ""}
       color="${v.color}"
-      grain={${v.grain}}
-      fibers={${v.fibers}}
-      strength={${v.strength}}
-      edge="${v.edge}"
-      distort={${v.distort}}
+      colorFront="${v.colorFront}"
+      contrast={${v.contrast}}
+      roughness={${v.roughness}}
+      fiber={${v.fiber}}
+      fiberSize={${v.fiberSize}}
+      crumples={${v.crumples}}
+      crumpleSize={${v.crumpleSize}}
+      folds={${v.folds}}
+      foldCount={${v.foldCount}}
+      drops={${v.drops}}
+      fade={${v.fade}}
+      seed={${v.seed}}
       radius={${v.radius}}
-      className="flex h-48 w-72 items-center justify-center"
-    >
-      <span className="text-xl font-medium text-neutral-800">Paper</span>
-    </Paper>
+      className="h-56 w-80"
+    />
   )
 }`,
   },
@@ -786,6 +835,185 @@ function Hint({ text }: { text: string }) {
     <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
       {text}
     </span>
+  )
+}
+
+const uploadButtonClass =
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/60 bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+
+/**
+ * Object URLs created for previews. They stay alive for the life of the page
+ * (the preview keeps referencing them) and are revoked together on unmount.
+ */
+function useObjectUrls() {
+  const created = useRef<string[]>([])
+
+  useEffect(() => {
+    const urls = created.current
+    return () => urls.forEach((url) => URL.revokeObjectURL(url))
+  }, [])
+
+  return (files: File[]) =>
+    files.map((file) => {
+      const url = URL.createObjectURL(file)
+      created.current.push(url)
+      return url
+    })
+}
+
+/** Upload one image; falls back to the shipped default. */
+function ImageField({
+  control,
+  value,
+  onChange,
+}: {
+  control: Extract<ControlKind, { type: "image" }>
+  value: string
+  onChange: (v: Value) => void
+}) {
+  const toUrls = useObjectUrls()
+
+  return (
+    <Row>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm">{control.label}</span>
+        <div className="flex items-center gap-2">
+          {value !== control.default && (
+            <button
+              onClick={() => onChange(control.default)}
+              className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+            >
+              Reset
+            </button>
+          )}
+          <label className={uploadButtonClass}>
+            <UploadSimpleIcon className="size-3.5" />
+            Upload
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onChange(toUrls([file])[0])
+              }}
+            />
+          </label>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value}
+            alt=""
+            className="size-9 shrink-0 rounded-md border border-border/60 object-cover"
+          />
+        </div>
+      </div>
+    </Row>
+  )
+}
+
+/** Upload a sequence of frames — at least `min`, at most `max`. */
+function ImagesField({
+  control,
+  value,
+  onChange,
+}: {
+  control: Extract<ControlKind, { type: "images" }>
+  value: string[]
+  onChange: (v: Value) => void
+}) {
+  const toUrls = useObjectUrls()
+  const [error, setError] = useState<string | null>(null)
+
+  function add(files: File[]) {
+    if (files.length === 0) return
+    const next = [...value, ...toUrls(files)]
+    if (next.length > control.max) {
+      setError(`At most ${control.max} frames — extras ignored.`)
+    } else {
+      setError(null)
+    }
+    onChange(next.slice(0, control.max))
+  }
+
+  function removeAt(i: number) {
+    const next = value.filter((_, n) => n !== i)
+    // Below the minimum the flipbook has nothing to cycle, so say so rather
+    // than silently rendering a still frame.
+    setError(
+      next.length < control.min ? `Needs at least ${control.min} frames.` : null
+    )
+    onChange(next)
+  }
+
+  return (
+    <Row>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-sm">
+          {control.label}
+          {control.hint && <Hint text={control.hint} />}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs tabular-nums text-muted-foreground">
+            {value.length}/{control.max}
+          </span>
+          <label className={uploadButtonClass}>
+            <UploadSimpleIcon className="size-3.5" />
+            Upload
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                add(Array.from(e.target.files ?? []))
+                // Let the same file be picked again after a remove.
+                e.target.value = ""
+              }}
+            />
+          </label>
+        </div>
+      </div>
+
+      {value.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {value.map((src, i) => (
+            <button
+              key={`${src}-${i}`}
+              onClick={() => removeAt(i)}
+              title="Remove frame"
+              className="group relative size-9 overflow-hidden rounded-md border border-border/60"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="size-full object-cover" />
+              <span className="absolute inset-0 hidden items-center justify-center bg-background/70 group-hover:flex">
+                <XIcon className="size-3.5" />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        {error ?? (
+          <>
+            {control.min}–{control.max} frames, each the same width and height.
+          </>
+        )}
+      </p>
+
+      {value.length !== BALL_FRAMES.length ||
+      value.some((src, i) => src !== BALL_FRAMES[i]) ? (
+        <button
+          onClick={() => {
+            setError(null)
+            onChange(BALL_FRAMES)
+          }}
+          className="mt-1 cursor-pointer text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        >
+          Reset to sample frames
+        </button>
+      ) : null}
+    </Row>
   )
 }
 
@@ -897,6 +1125,20 @@ function ControlField({
     )
   }
 
+  if (control.type === "image") {
+    return <ImageField control={control} value={String(value)} onChange={onChange} />
+  }
+
+  if (control.type === "images") {
+    return (
+      <ImagesField
+        control={control}
+        value={(value as string[]) ?? []}
+        onChange={onChange}
+      />
+    )
+  }
+
   // text
   return (
     <Row>
@@ -949,16 +1191,18 @@ export function ComponentPlayground({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <aside className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3">
+      <aside className="flex max-h-[80svh] flex-col gap-2 overflow-auto rounded-2xl border border-border bg-card p-3">
         <p className="px-1 pb-1 text-sm font-medium">Playground</p>
-        {config.controls.map((c) => (
-          <ControlField
-            key={c.prop}
-            control={c}
-            value={values[c.prop]}
-            onChange={(v) => setValues((prev) => ({ ...prev, [c.prop]: v }))}
-          />
-        ))}
+        {config.controls
+          .filter((c) => c.showIf?.(values) ?? true)
+          .map((c) => (
+            <ControlField
+              key={c.prop}
+              control={c}
+              value={values[c.prop]}
+              onChange={(v) => setValues((prev) => ({ ...prev, [c.prop]: v }))}
+            />
+          ))}
       </aside>
     </div>
   )
