@@ -1,5 +1,7 @@
 "use client"
 
+import { useRef } from "react"
+
 import { cn } from "@/lib/utils"
 
 interface MarqueeProps {
@@ -33,30 +35,62 @@ export function Marquee({
   slowFactor = 3,
   gap = "1.5rem",
 }: MarqueeProps) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  /** The running CSS animations of both duplicated groups. */
+  function animations() {
+    const el = ref.current
+    if (!el) return []
+    return Array.from(
+      el.querySelectorAll<HTMLElement>("[data-marquee-group]")
+    ).flatMap((group) => group.getAnimations())
+  }
+
+  function onEnter() {
+    if (pauseOnHover) {
+      animations().forEach((a) => a.pause())
+      return
+    }
+    if (slowOnHover) {
+      // Retime, don't re-declare. Overriding `animation-duration` keeps the
+      // elapsed time but re-maps it against the new duration, so the scroll
+      // snaps backwards; playbackRate slows it from exactly where it is.
+      animations().forEach((a) => a.updatePlaybackRate(1 / slowFactor))
+    }
+  }
+
+  function onLeave() {
+    animations().forEach((a) => {
+      a.updatePlaybackRate(1)
+      a.play()
+    })
+  }
+
   return (
     <div
+      ref={ref}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
       className={cn(
-        "group flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
+        "flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
         className
       )}
       style={
         {
           "--marquee-gap": gap,
           "--marquee-duration": `${duration}s`,
-          "--marquee-slow": `${duration * slowFactor}s`,
         } as React.CSSProperties
       }
     >
       {[0, 1].map((i) => (
         <div
           key={i}
+          data-marquee-group
           aria-hidden={i === 1}
           className={cn(
             "flex shrink-0 items-center justify-around gap-[var(--marquee-gap)] pr-[var(--marquee-gap)]",
             "min-w-full animate-[marquee_var(--marquee-duration)_linear_infinite]",
-            reverse && "[animation-direction:reverse]",
-            slowOnHover && "group-hover:[animation-duration:var(--marquee-slow)]",
-            pauseOnHover && "group-hover:[animation-play-state:paused]"
+            reverse && "[animation-direction:reverse]"
           )}
         >
           {children}

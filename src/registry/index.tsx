@@ -675,6 +675,15 @@ export function Example() {
     <div className="flex gap-3">
       <StaticButton>Buy</StaticButton>
       <StaticButton variant="secondary">Learn more</StaticButton>
+
+      {/* The gradient variant takes its own colours and angle. */}
+      <StaticButton
+        variant="gradient"
+        gradientColors={["#6366f1", "#8b5cf6", "#ec4899"]}
+        gradientAngle={120}
+      >
+        Upgrade
+      </StaticButton>
     </div>
   )
 }`,
@@ -702,16 +711,24 @@ export function Example() {
     category: "UI",
     playground: true,
     description:
-      "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
+      "A pannable, endless grid of any tiles you like — only on-screen cells mount.",
     sourcePath: "src/components/better/infinite-canvas.tsx",
     usage: `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
-import { HouseIcon, HeartIcon, StarIcon, BellIcon, UserIcon, EnvelopeIcon } from "@phosphor-icons/react"
+import { HouseIcon, HeartIcon, StarIcon, BellIcon } from "@phosphor-icons/react"
+
+// \`items\` is any ReactNode[] — icons, <img>, avatars, text, whole cards.
+// Each cell hashes its coordinates to pick one, so a cell always shows the
+// same tile and neighbours differ. Pass 1 item or 100: the grid is endless
+// either way, the items just repeat.
 
 export function Example() {
-  const icons = [Home, Heart, Star, Bell, User, Mail]
+  const icons = [HouseIcon, HeartIcon, StarIcon, BellIcon]
   return (
     <InfiniteCanvas
       className="h-80 w-full"
+      cellSize={88}   // grid spacing
+      tileSize={56}   // the tile drawn inside each cell
+      overscan={1}    // cells pre-mounted off-screen: no pop-in while dragging
       items={icons.map((Icon, i) => (
         <Icon key={i} className="size-6" />
       ))}

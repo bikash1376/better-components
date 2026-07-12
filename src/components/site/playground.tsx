@@ -85,6 +85,8 @@ interface PlaygroundConfig {
   controls: Control[]
   render: (v: Values) => ReactNode
   code: (v: Values) => string
+  /** Shown above the controls — how the component works, what it accepts. */
+  note?: string
 }
 
 /* ----------------------------------------------------------------- */
@@ -103,24 +105,52 @@ const CANVAS_ICONS = [
   CodeIcon,
 ]
 
-function CanvasPreview({
-  cellSize,
-  overscan,
-}: {
-  cellSize: number
-  overscan: number
-}) {
-  const items = CANVAS_ICONS.map((Icon, i) => (
+const CANVAS_WORDS = [
+  "Motion",
+  "Design",
+  "Grid",
+  "Pan",
+  "Tile",
+  "Loop",
+  "Drag",
+  "Endless",
+  "Canvas",
+]
+const CANVAS_SEEDS = ["ada", "brio", "cove", "dusk", "ember", "flux", "gale", "halo", "iris"]
+const CANVAS_IMAGES = [
+  "/flipbook/ball-1.svg",
+  "/flipbook/ball-2.svg",
+  "/flipbook/ball-3.svg",
+  "/hero_image.jpg",
+  "/animate-thumbnail.png",
+]
+
+/**
+ * Builds the tile pool. Any ReactNode works as a tile — this just demonstrates
+ * four kinds so the canvas's flexibility isn't left to the imagination.
+ */
+function canvasItems(content: string, count: number): ReactNode[] {
+  if (content === "avatars") {
+    return CANVAS_SEEDS.slice(0, count).map((seed) => (
+      <Avatar key={seed} seed={seed} style="notionists" size={40} />
+    ))
+  }
+  if (content === "text") {
+    return CANVAS_WORDS.slice(0, count).map((word) => (
+      <span key={word} className="text-xs font-medium">
+        {word}
+      </span>
+    ))
+  }
+  if (content === "images") {
+    return CANVAS_IMAGES.slice(0, count).map((src) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img key={src} src={src} alt="" className="size-full object-cover" />
+    ))
+  }
+  return CANVAS_ICONS.slice(0, count).map((Icon, i) => (
     <Icon key={i} className="size-6" />
   ))
-  return (
-    <InfiniteCanvas
-      items={items}
-      cellSize={cellSize}
-      overscan={overscan}
-      className="h-64 w-full"
-    />
-  )
 }
 
 /** The three sample frames shipped in `public/flipbook/`. */
@@ -133,6 +163,10 @@ const BALL_FRAMES = [
 /** Fewer than 3 frames isn't a flipbook; past 12 the cycle is a slideshow. */
 const FLIPBOOK_MIN_FRAMES = 3
 const FLIPBOOK_MAX_FRAMES = 12
+
+/** Under 3 the loop looks sparse; past 12 the strip is just long. */
+const MARQUEE_MIN_IMAGES = 3
+const MARQUEE_MAX_IMAGES = 12
 
 /* ----------------------------------------------------------------- */
 /* Per-component playground configs                                   */
@@ -168,6 +202,39 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
       { type: "text", prop: "label", label: "Label", default: "Buy" },
       { type: "number", prop: "radius", label: "Radius", min: 0, max: 40, default: 40, hint: "px" },
       { type: "boolean", prop: "disabled", label: "Disabled", default: false },
+      // The gradient's own knobs — only meaningful on that variant.
+      {
+        type: "color",
+        prop: "gradient1",
+        label: "Stop 1",
+        default: "#6366f1",
+        showIf: (v) => v.variant === "gradient",
+      },
+      {
+        type: "color",
+        prop: "gradient2",
+        label: "Stop 2",
+        default: "#8b5cf6",
+        showIf: (v) => v.variant === "gradient",
+      },
+      {
+        type: "color",
+        prop: "gradient3",
+        label: "Stop 3",
+        default: "#ec4899",
+        showIf: (v) => v.variant === "gradient",
+      },
+      {
+        type: "number",
+        prop: "gradientAngle",
+        label: "Angle",
+        min: 0,
+        max: 360,
+        step: 5,
+        default: 120,
+        hint: "deg",
+        showIf: (v) => v.variant === "gradient",
+      },
     ],
     render: (v) => (
       <StaticButton
@@ -175,6 +242,12 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         size={v.size as "sm" | "md" | "lg"}
         radius={v.radius as number}
         disabled={v.disabled as boolean}
+        gradientColors={[
+          String(v.gradient1),
+          String(v.gradient2),
+          String(v.gradient3),
+        ]}
+        gradientAngle={v.gradientAngle as number}
       >
         {String(v.label)}
       </StaticButton>
@@ -184,9 +257,15 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
 
 export function Example() {
   return (
-    <StaticButton variant="${v.variant}" size="${v.size}" radius={${v.radius}}${
-      v.disabled ? " disabled" : ""
-    }>
+    <StaticButton
+      variant="${v.variant}"
+      size="${v.size}"
+      radius={${v.radius}}${v.disabled ? "\n      disabled" : ""}${
+        v.variant === "gradient"
+          ? `\n      gradientColors={["${v.gradient1}", "${v.gradient2}", "${v.gradient3}"]}\n      gradientAngle={${v.gradientAngle}}`
+          : ""
+      }
+    >
       ${v.label}
     </StaticButton>
   )
@@ -246,23 +325,51 @@ export function Example() {
   },
 
   "infinite-canvas": {
+    // `items` is just ReactNode[] — the tiles can be anything. The Content
+    // control shows that off rather than leaving people to guess.
+    note: "Drag to pan — the grid never ends. `items` is any ReactNode[] (icons, images, avatars, text…); each cell hashes its coordinates to pick one, so the same cell always shows the same tile. Pass 1 item or 100 — the grid is endless either way, the items just repeat.",
     controls: [
-      { type: "number", prop: "cellSize", label: "Cell Size", min: 60, max: 140, default: 88, hint: "px" },
-      { type: "number", prop: "overscan", label: "Overscan", min: 0, max: 3, default: 1, hint: "cells" },
+      {
+        type: "select",
+        prop: "content",
+        label: "Content",
+        default: "icons",
+        options: [
+          { label: "Icons", value: "icons" },
+          { label: "Avatars", value: "avatars" },
+          { label: "Text", value: "text" },
+          { label: "Images", value: "images" },
+        ],
+      },
+      { type: "number", prop: "count", label: "Items", min: 1, max: 9, default: 9, hint: "in the pool" },
+      { type: "number", prop: "cellSize", label: "Cell size", min: 60, max: 160, default: 88, hint: "px" },
+      { type: "number", prop: "tileSize", label: "Tile size", min: 24, max: 120, step: 2, default: 56, hint: "px" },
+      // Pre-mounts cells outside the viewport: nothing changes while you sit
+      // still, it only removes pop-in at the edges as you drag.
+      { type: "number", prop: "overscan", label: "Overscan", min: 0, max: 3, default: 1, hint: "drag-only" },
     ],
     render: (v) => (
-      <CanvasPreview cellSize={v.cellSize as number} overscan={v.overscan as number} />
+      <InfiniteCanvas
+        items={canvasItems(String(v.content), v.count as number)}
+        cellSize={v.cellSize as number}
+        tileSize={v.tileSize as number}
+        overscan={v.overscan as number}
+        className="h-64 w-full"
+      />
     ),
     code: (v) =>
       `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
 import { HouseIcon, UserIcon, BellIcon, HeartIcon, StarIcon } from "@phosphor-icons/react"
 
+// items is ReactNode[] — swap these for <img>, <Avatar>, text, whole cards.
+const icons = [HouseIcon, UserIcon, BellIcon, HeartIcon, StarIcon]
+
 export function Example() {
-  const icons = [HouseIcon, UserIcon, BellIcon, HeartIcon, StarIcon]
   return (
     <InfiniteCanvas
       className="h-80 w-full"
       cellSize={${v.cellSize}}
+      tileSize={${v.tileSize}}
       overscan={${v.overscan}}
       items={icons.map((Icon, i) => (
         <Icon key={i} className="size-6" />
@@ -527,32 +634,102 @@ export function Example() {
   },
 
   marquee: {
+    note: "Children are whatever you pass — pills, logos, cards, images. Pause and Slow on hover both keep the scroll where it is rather than jumping.",
     controls: [
+      {
+        type: "select",
+        prop: "content",
+        label: "Content",
+        default: "text",
+        options: [
+          { label: "Text", value: "text" },
+          { label: "Images", value: "images" },
+        ],
+      },
+      {
+        type: "images",
+        prop: "images",
+        label: "Your images",
+        min: MARQUEE_MIN_IMAGES,
+        max: MARQUEE_MAX_IMAGES,
+        // Nothing is shown until you add your own.
+        default: [],
+        showIf: (v) => v.content === "images",
+      },
       { type: "number", prop: "duration", label: "Duration", min: 4, max: 40, default: 14, hint: "s" },
+      { type: "number", prop: "imageSize", label: "Image size", min: 40, max: 160, step: 4, default: 80, hint: "px", showIf: (v) => v.content === "images" },
       { type: "boolean", prop: "reverse", label: "Reverse", default: false },
       { type: "boolean", prop: "pauseOnHover", label: "Pause on hover", default: false },
       { type: "boolean", prop: "slowOnHover", label: "Slow on hover", default: true },
     ],
-    render: (v) => (
-      <Marquee
-        className="w-72"
-        duration={v.duration as number}
-        reverse={v.reverse as boolean}
-        pauseOnHover={v.pauseOnHover as boolean}
-        slowOnHover={v.slowOnHover as boolean}
-      >
-        {["Motion", "Design", "Animate", "Export", "Create"].map((t) => (
-          <span
-            key={t}
-            className="rounded-full border border-border px-4 py-1.5 text-sm font-medium"
-          >
-            {t}
-          </span>
-        ))}
-      </Marquee>
-    ),
+    render: (v) => {
+      const images = v.images as string[]
+      const useImages = v.content === "images"
+
+      if (useImages && images.length < MARQUEE_MIN_IMAGES) {
+        return (
+          <p className="max-w-xs text-center text-sm text-muted-foreground">
+            Upload at least {MARQUEE_MIN_IMAGES} images to preview the marquee.
+          </p>
+        )
+      }
+
+      return (
+        <Marquee
+          className="w-72"
+          duration={v.duration as number}
+          reverse={v.reverse as boolean}
+          pauseOnHover={v.pauseOnHover as boolean}
+          slowOnHover={v.slowOnHover as boolean}
+        >
+          {useImages
+            ? images.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={`${src}-${i}`}
+                  src={src}
+                  alt=""
+                  style={{
+                    width: v.imageSize as number,
+                    height: v.imageSize as number,
+                  }}
+                  className="shrink-0 rounded-xl border border-border object-cover"
+                />
+              ))
+            : ["Motion", "Design", "Animate", "Export", "Create"].map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium"
+                >
+                  {t}
+                </span>
+              ))}
+        </Marquee>
+      )
+    },
     code: (v) =>
-      `import { Marquee } from "@/components/better/marquee"
+      v.content === "images"
+        ? `import { Marquee } from "@/components/better/marquee"
+
+const logos = ["/a.png", "/b.png", "/c.png"]
+
+export function Example() {
+  return (
+    <Marquee duration={${v.duration}} reverse={${v.reverse}} pauseOnHover={${v.pauseOnHover}} slowOnHover={${v.slowOnHover}}>
+      {logos.map((src) => (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          width={${v.imageSize}}
+          height={${v.imageSize}}
+          className="shrink-0 rounded-xl border border-border object-cover"
+        />
+      ))}
+    </Marquee>
+  )
+}`
+        : `import { Marquee } from "@/components/better/marquee"
 
 const items = ["Motion", "Design", "Animate", "Export", "Create"]
 
@@ -911,6 +1088,9 @@ function ImageField({
   )
 }
 
+const sameList = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i])
+
 /** Upload a sequence of frames — at least `min`, at most `max`. */
 function ImagesField({
   control,
@@ -1001,18 +1181,19 @@ function ImagesField({
         )}
       </p>
 
-      {value.length !== BALL_FRAMES.length ||
-      value.some((src, i) => src !== BALL_FRAMES[i]) ? (
+      {/* Only offered once the value differs from what it shipped with — and
+          only when there's something to go back to. */}
+      {control.default.length > 0 && !sameList(value, control.default) && (
         <button
           onClick={() => {
             setError(null)
-            onChange(BALL_FRAMES)
+            onChange(control.default)
           }}
           className="mt-1 cursor-pointer text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           Reset to sample frames
         </button>
-      ) : null}
+      )}
     </Row>
   )
 }
@@ -1193,6 +1374,11 @@ export function ComponentPlayground({ slug }: { slug: string }) {
 
       <aside className="flex max-h-[80svh] flex-col gap-2 overflow-auto rounded-2xl border border-border bg-card p-3">
         <p className="px-1 pb-1 text-sm font-medium">Playground</p>
+        {config.note && (
+          <p className="rounded-xl border border-border/60 bg-muted/30 px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
+            {config.note}
+          </p>
+        )}
         {config.controls
           .filter((c) => c.showIf?.(values) ?? true)
           .map((c) => (
