@@ -128,10 +128,29 @@ export function Example() {
     playground: true,
     sourcePath: "src/components/better/stop-motion.tsx",
     usage: `import { StopMotion } from "@/components/better/stop-motion"
+import { SketchBorder } from "@/components/better/sketch-border"
 
 export function Example() {
   return (
-    <StopMotion className="text-4xl font-semibold">Stop Motion</StopMotion>
+    <>
+      {/* rotate/shift are the peak swing at either end of the boil. */}
+      <StopMotion
+        className="text-4xl font-semibold"
+        fps={8}
+        rotate={1.5}
+        shift={1}
+        steps={4}
+      >
+        Stop Motion
+      </StopMotion>
+
+      {/* Composes with SketchBorder — the boil wraps the hand-drawn box. */}
+      <StopMotion fps={8} rotate={2}>
+        <SketchBorder color="#6366f1" roughness={4} fps={8}>
+          <span className="px-3 py-1 text-4xl font-semibold">Stop Motion</span>
+        </SketchBorder>
+      </StopMotion>
+    </>
   )
 }`,
     Demo: () => (

@@ -767,21 +767,93 @@ export function Example() {
   },
 
   "stop-motion": {
+    note: "Wraps anything — text, an icon, a whole card. The border option is just SketchBorder nested inside; the two components compose, neither depends on the other.",
     controls: [
+      { type: "text", prop: "text", label: "Text", default: "Stop Motion" },
       { type: "number", prop: "fps", label: "FPS", min: 2, max: 16, default: 8 },
+      // How far it swings at either end of the boil.
+      { type: "number", prop: "rotate", label: "Rotate", min: 0, max: 8, step: 0.5, default: 1.5, hint: "deg" },
+      { type: "number", prop: "shift", label: "Shift", min: 0, max: 8, step: 0.5, default: 1, hint: "px" },
+      { type: "number", prop: "steps", label: "Steps", min: 2, max: 8, default: 4, hint: "frames" },
+      {
+        type: "select",
+        prop: "border",
+        label: "Border",
+        default: "none",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Hand-drawn", value: "sketch" },
+        ],
+      },
+      {
+        type: "color",
+        prop: "borderColor",
+        label: "Border color",
+        default: "#6366f1",
+        showIf: (v) => v.border === "sketch",
+      },
+      {
+        type: "number",
+        prop: "roughness",
+        label: "Roughness",
+        min: 1,
+        max: 8,
+        default: 4,
+        showIf: (v) => v.border === "sketch",
+      },
     ],
-    render: (v) => (
-      <StopMotion className="text-4xl font-semibold" fps={v.fps as number}>
-        Stop Motion
-      </StopMotion>
-    ),
+    render: (v) => {
+      const text = (
+        <span className="text-4xl font-semibold">{String(v.text)}</span>
+      )
+      return (
+        <StopMotion
+          fps={v.fps as number}
+          rotate={v.rotate as number}
+          shift={v.shift as number}
+          steps={v.steps as number}
+        >
+          {v.border === "sketch" ? (
+            <SketchBorder
+              color={String(v.borderColor)}
+              roughness={v.roughness as number}
+              fps={v.fps as number}
+            >
+              <span className="px-3 py-1">{text}</span>
+            </SketchBorder>
+          ) : (
+            text
+          )}
+        </StopMotion>
+      )
+    },
     code: (v) =>
-      `import { StopMotion } from "@/components/better/stop-motion"
+      v.border === "sketch"
+        ? `import { StopMotion } from "@/components/better/stop-motion"
+import { SketchBorder } from "@/components/better/sketch-border"
+
+// The boil wraps the border, so the whole box wobbles while the ink redraws.
+export function Example() {
+  return (
+    <StopMotion fps={${v.fps}} rotate={${v.rotate}} shift={${v.shift}} steps={${v.steps}}>
+      <SketchBorder color="${v.borderColor}" roughness={${v.roughness}} fps={${v.fps}}>
+        <span className="px-3 py-1 text-4xl font-semibold">${v.text}</span>
+      </SketchBorder>
+    </StopMotion>
+  )
+}`
+        : `import { StopMotion } from "@/components/better/stop-motion"
 
 export function Example() {
   return (
-    <StopMotion className="text-4xl font-semibold" fps={${v.fps}}>
-      Stop Motion
+    <StopMotion
+      className="text-4xl font-semibold"
+      fps={${v.fps}}
+      rotate={${v.rotate}}
+      shift={${v.shift}}
+      steps={${v.steps}}
+    >
+      ${v.text}
     </StopMotion>
   )
 }`,
