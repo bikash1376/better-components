@@ -67,42 +67,58 @@ export function SiteChrome({
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-4 px-6">
-        <div className="flex flex-1 justify-start">
-          <Link
-            href="/docs"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-background/70 px-3 text-sm text-foreground/80 shadow-sm backdrop-blur-md transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <BookOpenIcon className="size-4" />
-            Docs
-          </Link>
+      <header className="fixed inset-x-0 top-0 z-50 px-4 sm:px-6">
+        <div className="flex h-16 items-center gap-3 sm:gap-4">
+          <div className="flex flex-1 justify-start">
+            <Link
+              href="/docs"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-background/70 px-3 text-sm text-foreground/80 shadow-sm backdrop-blur-md transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <BookOpenIcon className="size-4" />
+              Docs
+            </Link>
+          </div>
+
+          {/* Centre slot. `min-w-0` lets a long install command shrink rather
+              than shoving the side clusters out of alignment. There's no room
+              for it beside the buttons on a phone — below md it moves to its
+              own row underneath. */}
+          {children && (
+            <div className="hidden min-w-0 items-center gap-2 md:flex">
+              {children}
+            </div>
+          )}
+
+          <div className="flex flex-1 items-center justify-end gap-2">
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search components"
+              title="Search components (⌘K)"
+              className={buttonClass}
+            >
+              <MagnifyingGlassIcon className="size-4" />
+            </button>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={
+                menuOpen ? "Close component list" : "Open component list"
+              }
+              className={buttonClass}
+            >
+              {menuOpen ? (
+                <XIcon className="size-4" />
+              ) : (
+                <ListIcon className="size-4" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Centre slot. `min-w-0` lets a long install command shrink rather
-            than shoving the side clusters out of alignment. */}
-        <div className="flex min-w-0 items-center gap-2">{children}</div>
-
-        <div className="flex flex-1 items-center justify-end gap-2">
-          <button
-            onClick={() => setSearchOpen(true)}
-            aria-label="Search components"
-            title="Search components (⌘K)"
-            className={buttonClass}
-          >
-            <MagnifyingGlassIcon className="size-4" />
-          </button>
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? "Close component list" : "Open component list"}
-            className={buttonClass}
-          >
-            {menuOpen ? (
-              <XIcon className="size-4" />
-            ) : (
-              <ListIcon className="size-4" />
-            )}
-          </button>
-        </div>
+        {children && (
+          <div className="flex min-w-0 items-center gap-2 pb-3 md:hidden">
+            {children}
+          </div>
+        )}
       </header>
 
       <AnimatePresence>
@@ -122,7 +138,7 @@ export function SiteChrome({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="fixed right-0 top-0 z-40 flex h-full w-80 flex-col border-l border-border/50 backdrop-blur-2xl"
+              className="fixed right-0 top-0 z-40 flex h-full w-[85vw] max-w-80 flex-col border-l border-border/50 backdrop-blur-2xl"
             >
               <nav className="flex-1 overflow-auto px-6 pb-6 pt-24">
                 {items.map((item, i) => (

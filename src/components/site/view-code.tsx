@@ -92,11 +92,11 @@ function CodeModal({
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
         transition={{ type: "spring", stiffness: 300, damping: 24 }}
         className={cn(
-          "relative z-10 flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl",
+          "relative z-10 flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl",
           "border border-border/60 bg-background/80 shadow-2xl backdrop-blur-xl"
         )}
       >
-        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-3 sm:px-4">
           {usage ? (
             <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5">
               {(["auto", "manual"] as const).map((t) => (

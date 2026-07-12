@@ -73,7 +73,9 @@ export default async function ComponentPage({
   }
 
   return (
-    <main className="relative flex min-h-svh flex-1 flex-col px-6 pb-16 pt-24">
+    // pt clears the fixed top bar — taller below md, where the install command
+    // sits on its own second row.
+    <main className="relative flex min-h-svh flex-1 flex-col px-4 pb-16 pt-32 sm:px-6 md:pt-24">
       {/* The install command rides in the top bar's centre slot, so it lines up
           with Docs and the search/menu buttons instead of sitting below them. */}
       <SiteChrome items={searchItems} current={slug} repoUrl={REPO_URL}>

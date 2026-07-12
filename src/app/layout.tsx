@@ -29,7 +29,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* overflow-x-clip is a backstop: a single wide demo (a marquee, a code
+          sample) must never make the whole page pan sideways on a phone. */}
+      <body className="flex min-h-full flex-col overflow-x-clip">
         {/* Loaded here (not as a raw <html> child) with a precedence so React 19
             hoists + dedupes it into <head>. These families are referenced by
             literal name inside the Animate editor, so next/font isn't a fit. */}

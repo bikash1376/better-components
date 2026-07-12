@@ -60,7 +60,7 @@ function Card({ code, lang }: { code: string; lang: string }) {
 
 export default function DocsPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
       <div className="flex items-center justify-between">
         <Link
           href="/"
@@ -157,9 +157,9 @@ export function Example() {
 
         <Section title="Manual install (copy &amp; paste)">
           <p>
-            Prefer not to use the CLI? Open any component, hover the dock in the
-            bottom-right, and choose{" "}
-            <span className="text-foreground">View code</span>. The{" "}
+            Prefer not to use the CLI? Open any component and hit the{" "}
+            <span className="text-foreground">View code</span> button beside the
+            install command. The{" "}
             <span className="text-foreground">Manual</span> tab is the full,
             syntax-highlighted source — paste it into{" "}
             <code className="font-mono text-foreground">
