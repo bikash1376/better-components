@@ -38,7 +38,7 @@ const JITTER = [
  * with optional camera jitter. No easing, no cross-fade: each frame simply
  * replaces the last, the way stop motion actually works. Frames can be
  * text/emoji children or a list of square `images`.
- * Category: Stop Motion. Part of the Better Component library.
+ * Category: Hand Drawn. Part of the Better Component library.
  */
 export function Flipbook({
   children,

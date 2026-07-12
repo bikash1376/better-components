@@ -22,7 +22,7 @@ interface SketchBorderProps {
 /**
  * SketchBorder — wraps content in a hand-drawn border that "boils": the
  * wobble is re-seeded a few times a second, like ink redrawn every frame.
- * Category: Stop Motion. Part of the Better Component library.
+ * Category: Hand Drawn. Part of the Better Component library.
  */
 export function SketchBorder({
   children,

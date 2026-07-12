@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 import Image from "next/image"
 
+import type { PropRow } from "@/lib/props"
+
 import { TextShimmer } from "@/components/better/text-shimmer"
 import { Avatar, type AvatarStyle } from "@/components/better/avatar"
 import { StopMotion } from "@/components/better/stop-motion"
@@ -42,7 +44,7 @@ export const categories = [
   "Apps",
   "UI",
   "Typography",
-  "Stop Motion",
+  "Hand Drawn",
   "Shaders",
   "Loaders",
   "Carousel",
@@ -90,6 +92,11 @@ export interface RegistryItem {
   hidden?: boolean
   /** Show the interactive controls playground on the detail page (see playground.tsx). */
   playground?: boolean
+  /**
+   * Rows prepended to the auto-generated props table for props the source
+   * parser can't see — e.g. cva variants declared outside the Props interface.
+   */
+  extraProps?: PropRow[]
 }
 
 export const components: RegistryItem[] = [
@@ -123,7 +130,7 @@ export function Example() {
   {
     slug: "stop-motion",
     name: "Stop Motion",
-    category: "Stop Motion",
+    category: "Hand Drawn",
     description: "Choppy, hand-animated stop-motion 'boil' for any content.",
     playground: true,
     sourcePath: "src/components/better/stop-motion.tsx",
@@ -165,7 +172,7 @@ export function Example() {
   {
     slug: "flipbook",
     name: "Flipbook",
-    category: "Stop Motion",
+    category: "Hand Drawn",
     description:
       "Snaps between frames — emoji, text, or square images — with no easing and no fades.",
     playground: true,
@@ -206,7 +213,7 @@ export function Example() {
   {
     slug: "sketch-border",
     name: "Sketch Border",
-    category: "Stop Motion",
+    category: "Hand Drawn",
     description: "A hand-drawn border that boils — redrawn a few times a second.",
     playground: true,
     sourcePath: "src/components/better/sketch-border.tsx",
@@ -599,7 +606,7 @@ import { StarIcon } from "@phosphor-icons/react"
 export function Example() {
   return (
     <IconTooltip
-      icon={<Star className="size-5" />}
+      icon={<StarIcon className="size-5" />}
       label="Favorite"
       side="top"
       delay={150}
@@ -612,7 +619,7 @@ export function Example() {
   {
     slug: "toast",
     name: "Toast",
-    category: "Mouse",
+    category: "UI",
     description:
       "A toast system: imperative toast(), spring stacking, swipe-to-dismiss, types.",
     sourcePath: "src/components/better/toast.tsx",
@@ -687,6 +694,23 @@ export function Example() {
     description:
       "A clean, Apple-style pill button — variants and sizes, pure CSS, no motion.",
     sourcePath: "src/components/better/static-button.tsx",
+    // variant/size live in the cva() call, invisible to the props parser.
+    extraProps: [
+      {
+        name: "variant",
+        type: `"primary" | "secondary" | "outline" | "ghost" | "gradient"`,
+        required: false,
+        default: `"primary"`,
+        description: "Visual style of the pill.",
+      },
+      {
+        name: "size",
+        type: `"sm" | "md" | "lg"`,
+        required: false,
+        default: `"md"`,
+        description: "Padding and text size.",
+      },
+    ],
     usage: `import { StaticButton } from "@/components/better/static-button"
 
 export function Example() {

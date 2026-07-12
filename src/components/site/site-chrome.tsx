@@ -8,9 +8,11 @@ import { AnimatePresence, motion } from "motion/react"
 import {
   BookOpenIcon,
   GithubLogoIcon,
+  HouseIcon,
   ListIcon,
   MoonIcon,
   MagnifyingGlassIcon,
+  SquaresFourIcon,
   SunIcon,
   XIcon,
 } from "@phosphor-icons/react"
@@ -27,9 +29,32 @@ export interface SearchItem {
 const buttonClass =
   "inline-flex size-9 cursor-pointer items-center justify-center rounded-lg border border-border/60 bg-background/70 text-foreground/70 shadow-sm backdrop-blur-md transition-colors hover:text-foreground"
 
+/** A top-bar nav chip: icon always, label only when there's room (≥ sm). */
+function NavChip({
+  href,
+  icon,
+  label,
+}: {
+  href: string
+  icon: ReactNode
+  label: string
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-background/70 px-2.5 text-sm text-foreground/80 shadow-sm backdrop-blur-md transition-colors hover:bg-muted hover:text-foreground sm:px-3"
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </Link>
+  )
+}
+
 /**
- * The top bar shared by the gallery and the component pages. One flex row —
- * Docs on the left, the page's own controls (install command, view code) in
+ * The top bar shared by every page. One flex row — Home / Docs / Components
+ * on the left, the page's own controls (install command, view code) in
  * the centre, search + menu on the right — so everything shares a baseline
  * instead of floating in three separately-positioned corners.
  *
@@ -69,14 +94,18 @@ export function SiteChrome({
     <>
       <header className="fixed inset-x-0 top-0 z-50 px-4 sm:px-6">
         <div className="flex h-16 items-center gap-3 sm:gap-4">
-          <div className="flex flex-1 justify-start">
-            <Link
+          <div className="flex flex-1 items-center justify-start gap-2">
+            <NavChip href="/" icon={<HouseIcon className="size-4" />} label="Home" />
+            <NavChip
               href="/docs"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-background/70 px-3 text-sm text-foreground/80 shadow-sm backdrop-blur-md transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <BookOpenIcon className="size-4" />
-              Docs
-            </Link>
+              icon={<BookOpenIcon className="size-4" />}
+              label="Docs"
+            />
+            <NavChip
+              href="/components"
+              icon={<SquaresFourIcon className="size-4" />}
+              label="Components"
+            />
           </div>
 
           {/* Centre slot. `min-w-0` lets a long install command shrink rather
@@ -141,35 +170,47 @@ export function SiteChrome({
               className="fixed right-0 top-0 z-40 flex h-full w-[85vw] max-w-80 flex-col border-l border-border/50 backdrop-blur-2xl"
             >
               <nav className="flex-1 overflow-auto px-6 pb-6 pt-24">
-                {items.map((item, i) => (
-                  <Link
-                    key={item.slug}
-                    href={`/components/${item.slug}`}
-                    onClick={() => setMenuOpen(false)}
-                    className="group flex cursor-pointer items-center gap-3 py-1"
-                  >
-                    <span
-                      className={cn(
-                        "h-px w-5 shrink-0 transition-all duration-300 group-hover:w-10",
-                        item.slug === current
-                          ? "w-10 bg-foreground"
-                          : "bg-muted-foreground/40 group-hover:bg-foreground"
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "text-sm transition-colors",
-                        item.slug === current
-                          ? "text-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      )}
-                    >
-                      <span className="tabular-nums text-muted-foreground/70">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>{" "}
-                      {item.name}
-                    </span>
-                  </Link>
+                {/* Same grouping as the gallery, so the two views share one
+                    mental model. Items arrive in registry order, so groups
+                    keep their first-appearance order. */}
+                {Object.entries(
+                  items.reduce<Record<string, SearchItem[]>>((acc, item) => {
+                    ;(acc[item.category] ??= []).push(item)
+                    return acc
+                  }, {})
+                ).map(([category, groupItems]) => (
+                  <div key={category} className="mb-5">
+                    <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+                      {category}
+                    </p>
+                    {groupItems.map((item) => (
+                      <Link
+                        key={item.slug}
+                        href={`/components/${item.slug}`}
+                        onClick={() => setMenuOpen(false)}
+                        className="group flex cursor-pointer items-center gap-3 py-1"
+                      >
+                        <span
+                          className={cn(
+                            "h-px w-5 shrink-0 transition-all duration-300 group-hover:w-10",
+                            item.slug === current
+                              ? "w-10 bg-foreground"
+                              : "bg-muted-foreground/40 group-hover:bg-foreground"
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "text-sm transition-colors",
+                            item.slug === current
+                              ? "text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground"
+                          )}
+                        >
+                          {item.name}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </nav>
 

@@ -2,7 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeftIcon, CompassIcon } from "@phosphor-icons/react"
+import {
+  ArrowLeftIcon,
+  CompassIcon,
+  GithubLogoIcon,
+} from "@phosphor-icons/react"
 
 import {
   Dialog,
@@ -20,7 +24,14 @@ const linkClass =
  * Top bar for full-bleed app pages (Animate). "Back" prompts a confirmation
  * first since leaving discards any unsaved work in the editor.
  */
-export function FullBleedTopBar({ backHref }: { backHref: string }) {
+export function FullBleedTopBar({
+  backHref,
+  sourceUrl,
+}: {
+  backHref: string
+  /** GitHub link to the app's source folder — apps aren't in the registry. */
+  sourceUrl?: string
+}) {
   const router = useRouter()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -35,17 +46,31 @@ export function FullBleedTopBar({ backHref }: { backHref: string }) {
         Back
       </button>
 
-      {/* Opposite the Back button: relaunch the editor walkthrough. */}
-      <button
-        type="button"
-        onClick={() =>
-          window.dispatchEvent(new Event("bettercomp:start-tour"))
-        }
-        className={linkClass}
-      >
-        <CompassIcon className="size-4" />
-        Take a tour
-      </button>
+      {/* Opposite the Back button: the source (apps install from GitHub, not
+          the registry) and the editor walkthrough. */}
+      <div className="flex items-center gap-2">
+        {sourceUrl && (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className={linkClass}
+          >
+            <GithubLogoIcon className="size-4" />
+            <span className="hidden sm:inline">Source</span>
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={() =>
+            window.dispatchEvent(new Event("bettercomp:start-tour"))
+          }
+          className={linkClass}
+        >
+          <CompassIcon className="size-4" />
+          Take a tour
+        </button>
+      </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-sm">
