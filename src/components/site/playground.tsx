@@ -957,10 +957,12 @@ export function Example() {
         fade={v.fade as number}
         seed={v.seed as number}
         radius={v.radius as number}
-        className="flex h-56 w-80 items-end justify-start p-4"
+        // Fills the preview pane rather than sitting as a small card in it —
+        // the texture detail (fibres, folds, drops) is the whole point.
+        className="flex aspect-[4/3] w-full max-w-xl items-end justify-start p-5"
       >
         {!v.useImage && (
-          <span className="text-xl font-medium text-neutral-800">Paper</span>
+          <span className="text-2xl font-medium text-neutral-800">Paper</span>
         )}
       </Paper>
     ),
@@ -984,7 +986,7 @@ export function Example() {
       fade={${v.fade}}
       seed={${v.seed}}
       radius={${v.radius}}
-      className="h-56 w-80"
+      className="aspect-[4/3] w-full max-w-xl"
     />
   )
 }`,
