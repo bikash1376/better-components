@@ -11,11 +11,12 @@ interface MarqueeProps {
   duration?: number
   /** Scroll right-to-left by default; reverse flips it. */
   reverse?: boolean
-  /** Pause the scroll while hovered. */
-  pauseOnHover?: boolean
-  /** Slow the scroll while hovered (ignored if `pauseOnHover` is set). */
-  slowOnHover?: boolean
-  /** How many times slower on hover when `slowOnHover` is on. */
+  /**
+   * What hovering does. One choice, not two flags — pausing and slowing are
+   * mutually exclusive, so they can't both be asked for.
+   */
+  hover?: "pause" | "slow" | "none"
+  /** How many times slower on hover when `hover` is "slow". */
   slowFactor?: number
   /** Gap between repeated groups (any CSS length). */
   gap?: string
@@ -30,8 +31,7 @@ export function Marquee({
   className,
   duration = 20,
   reverse = false,
-  pauseOnHover = true,
-  slowOnHover = false,
+  hover = "pause",
   slowFactor = 3,
   gap = "1.5rem",
 }: MarqueeProps) {
@@ -47,11 +47,9 @@ export function Marquee({
   }
 
   function onEnter() {
-    if (pauseOnHover) {
+    if (hover === "pause") {
       animations().forEach((a) => a.pause())
-      return
-    }
-    if (slowOnHover) {
+    } else if (hover === "slow") {
       // Retime, don't re-declare. Overriding `animation-duration` keeps the
       // elapsed time but re-maps it against the new duration, so the scroll
       // snaps backwards; playbackRate slows it from exactly where it is.
@@ -60,6 +58,7 @@ export function Marquee({
   }
 
   function onLeave() {
+    if (hover === "none") return
     animations().forEach((a) => {
       a.updatePlaybackRate(1)
       a.play()

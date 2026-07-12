@@ -659,8 +659,28 @@ export function Example() {
       { type: "number", prop: "duration", label: "Duration", min: 4, max: 40, default: 14, hint: "s" },
       { type: "number", prop: "imageSize", label: "Image size", min: 40, max: 160, step: 4, default: 80, hint: "px", showIf: (v) => v.content === "images" },
       { type: "boolean", prop: "reverse", label: "Reverse", default: false },
-      { type: "boolean", prop: "pauseOnHover", label: "Pause on hover", default: false },
-      { type: "boolean", prop: "slowOnHover", label: "Slow on hover", default: true },
+      // One choice — pausing and slowing can't both happen.
+      {
+        type: "select",
+        prop: "hover",
+        label: "On hover",
+        default: "slow",
+        options: [
+          { label: "Pause", value: "pause" },
+          { label: "Slow", value: "slow" },
+          { label: "Nothing", value: "none" },
+        ],
+      },
+      {
+        type: "number",
+        prop: "slowFactor",
+        label: "Slow by",
+        min: 2,
+        max: 8,
+        default: 3,
+        hint: "×",
+        showIf: (v) => v.hover === "slow",
+      },
     ],
     render: (v) => {
       const images = v.images as string[]
@@ -679,8 +699,8 @@ export function Example() {
           className="w-72"
           duration={v.duration as number}
           reverse={v.reverse as boolean}
-          pauseOnHover={v.pauseOnHover as boolean}
-          slowOnHover={v.slowOnHover as boolean}
+          hover={v.hover as "pause" | "slow" | "none"}
+          slowFactor={v.slowFactor as number}
         >
           {useImages
             ? images.map((src, i) => (
@@ -715,7 +735,7 @@ const logos = ["/a.png", "/b.png", "/c.png"]
 
 export function Example() {
   return (
-    <Marquee duration={${v.duration}} reverse={${v.reverse}} pauseOnHover={${v.pauseOnHover}} slowOnHover={${v.slowOnHover}}>
+    <Marquee duration={${v.duration}} reverse={${v.reverse}} hover="${v.hover}"${v.hover === "slow" ? ` slowFactor={${v.slowFactor}}` : ""}>
       {logos.map((src) => (
         <img
           key={src}
@@ -735,7 +755,7 @@ const items = ["Motion", "Design", "Animate", "Export", "Create"]
 
 export function Example() {
   return (
-    <Marquee duration={${v.duration}} reverse={${v.reverse}} pauseOnHover={${v.pauseOnHover}} slowOnHover={${v.slowOnHover}}>
+    <Marquee duration={${v.duration}} reverse={${v.reverse}} hover="${v.hover}"${v.hover === "slow" ? ` slowFactor={${v.slowFactor}}` : ""}>
       {items.map((t) => (
         <span key={t} className="rounded-full border border-border px-4 py-1.5 text-sm font-medium">
           {t}

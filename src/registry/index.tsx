@@ -477,7 +477,7 @@ export function Example() {
 
 export function Example() {
   return (
-    <Marquee duration={12} pauseOnHover>
+    <Marquee duration={12} hover="pause">
       <span>Motion</span>
       <span>Design</span>
       <span>Animate</span>
