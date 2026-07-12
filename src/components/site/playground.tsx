@@ -1,11 +1,22 @@
 "use client"
 
 import { useMemo, useState, type ReactNode } from "react"
-import { ChevronDown } from "lucide-react"
+import {
+  BellIcon,
+  CaretDownIcon,
+  CodeIcon,
+  EnvelopeIcon,
+  GearIcon,
+  HeartIcon,
+  HouseIcon,
+  MagnifyingGlassIcon,
+  StarIcon,
+  UserIcon,
+} from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
-import { useIcons } from "@/components/site/icons"
 import { CodeBlock } from "@/components/site/code-block"
+import { Avatar, AVATAR_STYLES } from "@/components/better/avatar"
 import { StaticButton } from "@/components/better/static-button"
 import { MagneticCard } from "@/components/better/magnetic-card"
 import { MagneticButton } from "@/components/better/magnetic-button"
@@ -60,29 +71,20 @@ interface PlaygroundConfig {
 }
 
 /* ----------------------------------------------------------------- */
-/* Previews that need hooks live as their own components              */
+/* Previews that need a little wiring live as their own components     */
 /* ----------------------------------------------------------------- */
 
-function TooltipPreview({
-  side,
-  delay,
-  duration,
-}: {
-  side: string
-  delay: number
-  duration: number
-}) {
-  const { icons } = useIcons()
-  return (
-    <IconTooltip
-      icon={<icons.settings className="size-5" />}
-      label="Settings"
-      side={side as "top" | "bottom" | "left" | "right"}
-      delay={delay}
-      duration={duration}
-    />
-  )
-}
+const CANVAS_ICONS = [
+  HouseIcon,
+  UserIcon,
+  BellIcon,
+  HeartIcon,
+  StarIcon,
+  GearIcon,
+  MagnifyingGlassIcon,
+  EnvelopeIcon,
+  CodeIcon,
+]
 
 function CanvasPreview({
   cellSize,
@@ -91,18 +93,9 @@ function CanvasPreview({
   cellSize: number
   overscan: number
 }) {
-  const { icons } = useIcons()
-  const items = [
-    icons.home,
-    icons.user,
-    icons.bell,
-    icons.heart,
-    icons.star,
-    icons.settings,
-    icons.search,
-    icons.mail,
-    icons.code,
-  ].map((Icon, i) => <Icon key={i} className="size-6" />)
+  const items = CANVAS_ICONS.map((Icon, i) => (
+    <Icon key={i} className="size-6" />
+  ))
   return (
     <InfiniteCanvas
       items={items}
@@ -112,6 +105,13 @@ function CanvasPreview({
     />
   )
 }
+
+/** The three sample frames shipped in `public/flipbook/`. */
+const BALL_FRAMES = [
+  "/flipbook/ball-1.svg",
+  "/flipbook/ball-2.svg",
+  "/flipbook/ball-3.svg",
+]
 
 /* ----------------------------------------------------------------- */
 /* Per-component playground configs                                   */
@@ -234,10 +234,10 @@ export function Example() {
     ),
     code: (v) =>
       `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
-import { Home, User, Bell, Heart, Star } from "lucide-react"
+import { HouseIcon, UserIcon, BellIcon, HeartIcon, StarIcon } from "@phosphor-icons/react"
 
 export function Example() {
-  const icons = [Home, User, Bell, Heart, Star]
+  const icons = [HouseIcon, UserIcon, BellIcon, HeartIcon, StarIcon]
   return (
     <InfiniteCanvas
       className="h-80 w-full"
@@ -269,20 +269,22 @@ export function Example() {
       { type: "number", prop: "duration", label: "Auto-hide", min: 0, max: 4000, step: 250, default: 0, hint: "ms" },
     ],
     render: (v) => (
-      <TooltipPreview
-        side={String(v.side)}
+      <IconTooltip
+        icon={<GearIcon className="size-5" />}
+        label="Settings"
+        side={v.side as "top" | "bottom" | "left" | "right"}
         delay={v.delay as number}
         duration={v.duration as number}
       />
     ),
     code: (v) =>
       `import { IconTooltip } from "@/components/better/icon-tooltip"
-import { Settings } from "lucide-react"
+import { GearIcon } from "@phosphor-icons/react"
 
 export function Example() {
   return (
     <IconTooltip
-      icon={<Settings className="size-5" />}
+      icon={<GearIcon className="size-5" />}
       label="Settings"
       side="${v.side}"
       delay={${v.delay}}
@@ -569,22 +571,60 @@ export function Example() {
 
   flipbook: {
     controls: [
+      {
+        type: "select",
+        prop: "frames",
+        label: "Frames",
+        default: "emoji",
+        options: [
+          { label: "Emoji", value: "emoji" },
+          { label: "Images", value: "images" },
+        ],
+      },
+      // Images are drawn into a square box, so one number sizes both sides.
+      { type: "number", prop: "size", label: "Size", min: 48, max: 200, step: 4, default: 96, hint: "px" },
       { type: "number", prop: "fps", label: "FPS", min: 1, max: 8, default: 4 },
       { type: "boolean", prop: "jitter", label: "Jitter", default: true },
     ],
-    render: (v) => (
-      <Flipbook
-        className="text-5xl"
-        fps={v.fps as number}
-        jitter={v.jitter as boolean}
-      >
-        <span>✊</span>
-        <span>✋</span>
-        <span>✌️</span>
-      </Flipbook>
-    ),
+    render: (v) =>
+      v.frames === "images" ? (
+        <Flipbook
+          images={BALL_FRAMES}
+          alt="A bouncing ball"
+          size={v.size as number}
+          fps={v.fps as number}
+          jitter={v.jitter as boolean}
+        />
+      ) : (
+        // Emoji frames size themselves off the inherited font size.
+        <div style={{ fontSize: (v.size as number) * 0.6 }}>
+          <Flipbook fps={v.fps as number} jitter={v.jitter as boolean}>
+            <span>✊</span>
+            <span>✋</span>
+            <span>✌️</span>
+          </Flipbook>
+        </div>
+      ),
     code: (v) =>
-      `import { Flipbook } from "@/components/better/flipbook"
+      v.frames === "images"
+        ? `import { Flipbook } from "@/components/better/flipbook"
+
+// Every image must have the SAME width and height (a square source) — frames
+// are drawn into a square size×size box, so a mismatched aspect ratio crops.
+const frames = ["/flipbook/ball-1.svg", "/flipbook/ball-2.svg", "/flipbook/ball-3.svg"]
+
+export function Example() {
+  return (
+    <Flipbook
+      images={frames}
+      alt="A bouncing ball"
+      size={${v.size}}
+      fps={${v.fps}}
+      jitter={${v.jitter}}
+    />
+  )
+}`
+        : `import { Flipbook } from "@/components/better/flipbook"
 
 export function Example() {
   return (
@@ -622,6 +662,48 @@ export function Example() {
     <SketchBorder color="${v.color}" strokeWidth={${v.strokeWidth}} roughness={${v.roughness}} radius={${v.radius}}>
       <span className="px-4 py-2 text-lg font-medium">Hand drawn</span>
     </SketchBorder>
+  )
+}`,
+  },
+
+  avatar: {
+    controls: [
+      { type: "text", prop: "seed", label: "Seed", default: "bikash" },
+      {
+        type: "select",
+        prop: "style",
+        label: "Style",
+        default: "gradient",
+        // Only CC0 DiceBear styles, plus our own paper.design shader.
+        options: AVATAR_STYLES.map((s) => ({ label: s, value: s })),
+      },
+      { type: "number", prop: "size", label: "Size", min: 32, max: 200, step: 4, default: 96, hint: "px" },
+      { type: "boolean", prop: "round", label: "Round", default: true },
+      { type: "number", prop: "speed", label: "Shader speed", min: 0, max: 2, step: 0.1, default: 0, hint: "gradient only" },
+    ],
+    render: (v) => (
+      <Avatar
+        seed={String(v.seed)}
+        style={v.style as (typeof AVATAR_STYLES)[number]}
+        size={v.size as number}
+        round={v.round as boolean}
+        speed={v.speed as number}
+      />
+    ),
+    code: (v) =>
+      `import { Avatar } from "@/components/better/avatar"
+
+// npm i @dicebear/core @dicebear/collection
+// Same seed always renders the same avatar.
+
+export function Example() {
+  return (
+    <Avatar
+      seed="${v.seed}"
+      style="${v.style}"
+      size={${v.size}}
+      round={${v.round}}${v.style === "gradient" ? `\n      speed={${v.speed}}` : ""}
+    />
   )
 }`,
   },
@@ -733,7 +815,7 @@ function ControlField({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <CaretDownIcon className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           </div>
         </div>
       </Row>

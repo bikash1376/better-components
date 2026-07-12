@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
+import Image from "next/image"
 
 import { TextShimmer } from "@/components/better/text-shimmer"
+import { Avatar, type AvatarStyle } from "@/components/better/avatar"
 import { StopMotion } from "@/components/better/stop-motion"
 import { Animate } from "@/components/better/animate"
 import { DotsLoader } from "@/components/better/dots-loader"
@@ -30,9 +32,11 @@ import {
   ToastPoster,
 } from "@/components/better/icon-demos"
 
-/** Base URL of the GitHub repo that hosts the component source. */
-export const GITHUB_BASE =
-  "https://github.com/bikash1376/better-components/blob/main"
+/** The GitHub repo that hosts the component source. */
+export const REPO_URL = "https://github.com/bikash1376/better-components"
+
+/** Prefix for deep links to a source file on the default branch. */
+export const GITHUB_BASE = `${REPO_URL}/blob/main`
 
 export const categories = [
   "Apps",
@@ -47,6 +51,15 @@ export const categories = [
 
 /** Categories that get a "New" badge in the gallery. */
 export const newCategories: Category[] = ["Apps", "UI"]
+
+/** The handful of avatar styles the gallery card shows off. */
+const AVATAR_DEMO_STYLES: AvatarStyle[] = [
+  "notionists",
+  "lorelei",
+  "pixel-art",
+  "thumbs",
+  "gradient",
+]
 
 export type Category = (typeof categories)[number]
 
@@ -65,6 +78,11 @@ export interface RegistryItem {
   Poster: () => ReactNode
   /** Render the detail page full-screen with no command/title chrome (for apps). */
   fullBleed?: boolean
+  /**
+   * Never mount `Demo` in the gallery — show `Poster` even on hover. For heavy
+   * apps whose demo hijacks the card (Animate opens its tour on mount).
+   */
+  staticPreview?: boolean
   /**
    * Temporarily kept in the registry (source + direct URL still resolve) but
    * hidden from the gallery, search, and sidebar listings.
@@ -129,18 +147,32 @@ export function Example() {
     slug: "flipbook",
     name: "Flipbook",
     category: "Stop Motion",
-    description: "Snaps between children like flipbook pages — no easing, no fades.",
+    description:
+      "Snaps between frames — emoji, text, or square images — with no easing and no fades.",
     playground: true,
     sourcePath: "src/components/better/flipbook.tsx",
     usage: `import { Flipbook } from "@/components/better/flipbook"
 
 export function Example() {
   return (
-    <Flipbook fps={4} jitter>
-      <span className="text-4xl">✊</span>
-      <span className="text-4xl">✋</span>
-      <span className="text-4xl">✌️</span>
-    </Flipbook>
+    <>
+      {/* Text or emoji frames — one child per frame. */}
+      <Flipbook fps={4} jitter>
+        <span className="text-4xl">✊</span>
+        <span className="text-4xl">✋</span>
+        <span className="text-4xl">✌️</span>
+      </Flipbook>
+
+      {/* Image frames. Give every image the SAME width and height (a square
+          source) — they're drawn into a square \`size\`×\`size\` box, so a
+          mismatched aspect ratio gets cropped and the sequence wobbles. */}
+      <Flipbook
+        images={["/flipbook/ball-1.svg", "/flipbook/ball-2.svg", "/flipbook/ball-3.svg"]}
+        alt="A bouncing ball"
+        size={96}
+        fps={6}
+      />
+    </>
   )
 }`,
     Demo: () => (
@@ -543,7 +575,7 @@ export function Example() {
       "An icon button that reveals a tooltip — choose the side and delay.",
     sourcePath: "src/components/better/icon-tooltip.tsx",
     usage: `import { IconTooltip } from "@/components/better/icon-tooltip"
-import { Star } from "lucide-react"
+import { StarIcon } from "@phosphor-icons/react"
 
 export function Example() {
   return (
@@ -601,6 +633,7 @@ export function Example() {
     name: "Animate",
     category: "Apps",
     fullBleed: true,
+    staticPreview: true,
     description:
       "A motion design editor: shapes, effects, undo/zoom, dual frame/time timeline, AI generation, video export.",
     sourcePath: "src/components/better/animate/animate.tsx",
@@ -615,26 +648,16 @@ export function Example() {
   )
 }`,
     Demo: () => <Animate />,
+    // A still of the editor, never the editor itself — mounting it in a gallery
+    // card would pop the onboarding tour the moment you hovered the card.
     Poster: () => (
-      <div className="flex w-56 flex-col gap-1.5 rounded-lg border border-border bg-card p-2">
-        <div className="flex gap-1">
-          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-        </div>
-        <div className="relative h-16 rounded bg-muted/40">
-          <span className="absolute left-3 top-3 size-5 rounded bg-indigo-500" />
-          <span className="absolute left-12 top-5 size-6 rounded-full bg-rose-500" />
-          <span className="absolute right-4 top-2 size-0 border-x-8 border-b-[14px] border-x-transparent border-b-emerald-500" />
-        </div>
-        <div className="flex gap-1">
-          {[0, 1, 2, 3].map((i) => (
-            <span
-              key={i}
-              className="h-4 flex-1 rounded-sm border border-border bg-background"
-            />
-          ))}
-        </div>
-      </div>
+      <Image
+        src="/animate-thumbnail.png"
+        alt="The Animate editor: canvas, shape tools, and a frame timeline"
+        width={1918}
+        height={1075}
+        className="h-full w-auto rounded-lg border border-border object-contain"
+      />
     ),
   },
   {
@@ -682,7 +705,7 @@ export function Example() {
       "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
     sourcePath: "src/components/better/infinite-canvas.tsx",
     usage: `import { InfiniteCanvas } from "@/components/better/infinite-canvas"
-import { Home, Heart, Star, Bell, User, Mail } from "lucide-react"
+import { HouseIcon, HeartIcon, StarIcon, BellIcon, UserIcon, EnvelopeIcon } from "@phosphor-icons/react"
 
 export function Example() {
   const icons = [Home, Heart, Star, Bell, User, Mail]
@@ -728,6 +751,50 @@ export function Example() {
     Poster: () => (
       <div className="flex h-44 w-64 items-center justify-center rounded-2xl bg-[#f4efe4] shadow-lg">
         <span className="text-xl font-medium text-neutral-800">Paper</span>
+      </div>
+    ),
+  },
+  {
+    slug: "avatar",
+    name: "Avatar",
+    category: "UI",
+    playground: true,
+    description:
+      "Deterministic avatars from any seed — DiceBear CC0 art styles or an abstract shader gradient.",
+    sourcePath: "src/components/better/avatar.tsx",
+    usage: `import { Avatar, AvatarPicker } from "@/components/better/avatar"
+
+// npm i @dicebear/core @dicebear/collection
+// DiceBear's code is MIT; only its CC0 (public-domain) styles are exposed
+// here, so no attribution is owed. "gradient" is a paper.design shader.
+
+export function Example() {
+  return (
+    <div className="flex items-center gap-6">
+      {/* Same seed always renders the same avatar. */}
+      <Avatar seed="bikash" style="notionists" size={64} />
+      <Avatar seed="bikash" style="gradient" size={64} />
+
+      {/* Let someone pick their own — onChange gives you { seed, style }. */}
+      <AvatarPicker
+        defaultStyle="gradient"
+        onChange={(value) => console.log(value)}
+      />
+    </div>
+  )
+}`,
+    Demo: () => (
+      <div className="flex items-center gap-3">
+        {AVATAR_DEMO_STYLES.map((s) => (
+          <Avatar key={s} seed="bettercomp" style={s} size={52} speed={0.4} />
+        ))}
+      </div>
+    ),
+    Poster: () => (
+      <div className="flex items-center gap-3">
+        {AVATAR_DEMO_STYLES.map((s) => (
+          <Avatar key={s} seed="bettercomp" style={s} size={52} />
+        ))}
       </div>
     ),
   },

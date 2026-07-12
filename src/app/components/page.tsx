@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { ActionDock } from "@/components/site/action-dock"
 import { GalleryCard } from "@/components/site/gallery-card"
+import { SiteChrome } from "@/components/site/site-chrome"
 import {
-  GITHUB_BASE,
+  REPO_URL,
   componentsByCategory,
   newCategories,
   visibleComponents,
@@ -24,6 +24,8 @@ export default function ComponentsPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">
+      <SiteChrome items={searchItems} repoUrl={REPO_URL} />
+
       <div className="mb-12 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Components</h1>
@@ -33,7 +35,7 @@ export default function ComponentsPage() {
         </div>
         <Link
           href="/docs"
-          className="shrink-0 rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-muted"
+          className="mr-24 shrink-0 rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-muted"
         >
           Docs
         </Link>
@@ -66,7 +68,7 @@ export default function ComponentsPage() {
                     slug={item.slug}
                     name={item.name}
                     description={item.description}
-                    demo={<item.Demo />}
+                    demo={item.staticPreview ? <item.Poster /> : <item.Demo />}
                     poster={<item.Poster />}
                   />
                 ))}
@@ -75,12 +77,6 @@ export default function ComponentsPage() {
           </section>
         ))}
       </div>
-
-      <ActionDock
-        variant="gallery"
-        githubUrl={`${GITHUB_BASE}/src/components/better`}
-        items={searchItems}
-      />
     </main>
   )
 }

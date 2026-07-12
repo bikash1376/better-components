@@ -68,9 +68,8 @@ limiting** — deployed as-is, anyone could loop it and burn the API key.
 - **Icon input sanitizing:** validate `iconName` (`/^[a-z0-9-]+$/`) and `fill`
   (hex) before building the Phosphor CDN URL / SVG in
   `src/components/better/animate/icons.tsx`.
-- **npm name:** `bettercomp` / `@bettercomp` is not yet reserved on npm; the
-  registry URL stays the Vercel deployment (`better-components-alpha.vercel.app`)
-  for now.
+- **npm name:** `bettercomp` / `@bettercomp` is not yet reserved on npm. The
+  registry is served from `components.bksh.site`.
 
 ---
 

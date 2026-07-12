@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, Copy } from "lucide-react"
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -32,7 +32,7 @@ export function InstallCommand({ command, className }: InstallCommandProps) {
     >
       <span className="whitespace-nowrap">{command}</span>
       <span className="text-neutral-400 transition-colors group-hover:text-neutral-100">
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+        {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
       </span>
     </button>
   )

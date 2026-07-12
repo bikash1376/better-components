@@ -1,41 +1,54 @@
 "use client"
 
-import { useIcons } from "@/components/site/icons"
+import {
+  BellIcon,
+  CodeIcon,
+  EnvelopeIcon,
+  GearIcon,
+  HeartIcon,
+  HouseIcon,
+  MagnifyingGlassIcon,
+  StarIcon,
+  UserIcon,
+} from "@phosphor-icons/react"
+
 import { IconTooltip } from "@/components/better/icon-tooltip"
 import { IconWheel } from "@/components/better/icon-wheel"
 import { InfiniteCanvas } from "@/components/better/infinite-canvas"
 import { Toaster, toast } from "@/components/better/toast"
 
-/**
- * Demo wrappers that feed icons from the currently-selected icon library into
- * each component, so switching libraries visibly changes the rendered icons.
- */
+/** Demo wrappers for the components that need a handful of icons to show off. */
+
+const WHEEL_ITEMS = [
+  { Icon: HouseIcon, label: "Home" },
+  { Icon: UserIcon, label: "User" },
+  { Icon: BellIcon, label: "Bell" },
+  { Icon: HeartIcon, label: "Heart" },
+  { Icon: GearIcon, label: "Settings" },
+  { Icon: MagnifyingGlassIcon, label: "Search" },
+]
+
+const CANVAS_ICONS = [
+  HouseIcon,
+  UserIcon,
+  BellIcon,
+  HeartIcon,
+  StarIcon,
+  GearIcon,
+  MagnifyingGlassIcon,
+  EnvelopeIcon,
+  CodeIcon,
+]
 
 export function IconTooltipDemo() {
-  const { icons } = useIcons()
-  return (
-    <IconTooltip icon={<icons.settings className="size-5" />} label="Settings" />
-  )
-}
-
-function useWheelItems() {
-  const { icons } = useIcons()
-  return [
-    { Icon: icons.home, label: "Home" },
-    { Icon: icons.user, label: "User" },
-    { Icon: icons.bell, label: "Bell" },
-    { Icon: icons.heart, label: "Heart" },
-    { Icon: icons.settings, label: "Settings" },
-    { Icon: icons.search, label: "Search" },
-  ]
+  return <IconTooltip icon={<GearIcon className="size-5" />} label="Settings" />
 }
 
 export function IconWheelDemo() {
-  const items = useWheelItems()
   return (
     <IconWheel
       radius={120}
-      items={items.map(({ Icon, label }) => ({
+      items={WHEEL_ITEMS.map(({ Icon, label }) => ({
         icon: <Icon className="size-5" />,
         label,
       }))}
@@ -45,11 +58,10 @@ export function IconWheelDemo() {
 
 /** Compact static-ish wheel for the gallery card. */
 export function IconWheelPoster() {
-  const items = useWheelItems()
   return (
     <IconWheel
       radius={64}
-      items={items.map(({ Icon, label }) => ({
+      items={WHEEL_ITEMS.map(({ Icon, label }) => ({
         icon: <Icon className="size-3.5" />,
         label,
       }))}
@@ -61,24 +73,10 @@ export function IconWheelPoster() {
 /* Infinite Canvas                                                   */
 /* ---------------------------------------------------------------- */
 
-function useCanvasIcons() {
-  const { icons } = useIcons()
-  const set = [
-    icons.home,
-    icons.user,
-    icons.bell,
-    icons.heart,
-    icons.star,
-    icons.settings,
-    icons.search,
-    icons.mail,
-    icons.code,
-  ]
-  return set.map((Icon, i) => <Icon key={i} className="size-6" />)
-}
-
 export function InfiniteCanvasDemo() {
-  const items = useCanvasIcons()
+  const items = CANVAS_ICONS.map((Icon, i) => (
+    <Icon key={i} className="size-6" />
+  ))
   return <InfiniteCanvas items={items} className="h-40 w-full" cellSize={80} />
 }
 
@@ -145,8 +143,14 @@ export function ToastPoster() {
 
 /** Static tile grid for the gallery poster (no drag handlers, no springs). */
 export function InfiniteCanvasPoster() {
-  const { icons } = useIcons()
-  const grid = [icons.home, icons.heart, icons.star, icons.bell, icons.user, icons.mail]
+  const grid = [
+    HouseIcon,
+    HeartIcon,
+    StarIcon,
+    BellIcon,
+    UserIcon,
+    EnvelopeIcon,
+  ]
   return (
     <div className="grid grid-cols-3 gap-3">
       {grid.map((Icon, i) => (

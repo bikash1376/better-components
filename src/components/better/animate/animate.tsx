@@ -3,39 +3,39 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTheme } from "next-themes"
 import {
-  Circle,
-  ChevronDown,
-  Clock,
-  Download,
-  Heart,
-  Hexagon,
-  ImagePlus,
-  LayoutTemplate,
-  Layers,
-  Maximize2,
-  MessageSquare,
-  Minus,
-  MoveRight,
-  Pause,
-  Pencil,
-  Play,
-  Plus,
-  Redo2,
-  Repeat,
-  RotateCcw,
-  Send,
-  Shapes,
-  Sparkles,
-  Square,
-  Star,
-  Trash2,
-  Triangle as TriangleIcon,
-  Type,
-  Undo2,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react"
+  CircleIcon,
+  CaretDownIcon,
+  ClockIcon,
+  DownloadIcon,
+  HeartIcon,
+  HexagonIcon,
+  ImageSquareIcon,
+  LayoutIcon,
+  StackSimpleIcon,
+  CornersOutIcon,
+  ChatCircleIcon,
+  MinusIcon,
+  ArrowRightIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  PlusIcon,
+  ArrowUUpRightIcon,
+  RepeatIcon,
+  ArrowCounterClockwiseIcon,
+  PaperPlaneTiltIcon,
+  ShapesIcon,
+  SparkleIcon,
+  SquareIcon,
+  StarIcon,
+  TrashIcon,
+  TriangleIcon,
+  TextTIcon,
+  ArrowUUpLeftIcon,
+  XIcon,
+  MagnifyingGlassPlusIcon,
+  MagnifyingGlassMinusIcon,
+} from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -94,8 +94,8 @@ import {
 } from "./types"
 
 const SHAPE_TEMPLATES: { type: ShapeType; label: string; icon: React.ReactNode }[] = [
-  { type: "square", label: "Square", icon: <Square className="size-4" /> },
-  { type: "circle", label: "Circle", icon: <Circle className="size-4" /> },
+  { type: "square", label: "Square", icon: <SquareIcon className="size-4" /> },
+  { type: "circle", label: "Circle", icon: <CircleIcon className="size-4" /> },
   {
     type: "rectangle",
     label: "Rectangle",
@@ -107,11 +107,11 @@ const SHAPE_TEMPLATES: { type: ShapeType; label: string; icon: React.ReactNode }
     label: "Oval",
     icon: <div className="h-3 w-4 rounded-full border-2 border-current" />,
   },
-  { type: "star", label: "Star", icon: <Star className="size-4" /> },
-  { type: "heart", label: "Heart", icon: <Heart className="size-4" /> },
-  { type: "hexagon", label: "Hexagon", icon: <Hexagon className="size-4" /> },
-  { type: "line", label: "Line", icon: <Minus className="size-4" /> },
-  { type: "arrow", label: "Arrow", icon: <MoveRight className="size-4" /> },
+  { type: "star", label: "Star", icon: <StarIcon className="size-4" /> },
+  { type: "heart", label: "Heart", icon: <HeartIcon className="size-4" /> },
+  { type: "hexagon", label: "Hexagon", icon: <HexagonIcon className="size-4" /> },
+  { type: "line", label: "Line", icon: <MinusIcon className="size-4" /> },
+  { type: "arrow", label: "Arrow", icon: <ArrowRightIcon className="size-4" /> },
   {
     type: "button",
     label: "Button",
@@ -121,8 +121,8 @@ const SHAPE_TEMPLATES: { type: ShapeType; label: string; icon: React.ReactNode }
       </div>
     ),
   },
-  { type: "icon", label: "Icon", icon: <Shapes className="size-4" /> },
-  { type: "text", label: "Text", icon: <Type className="size-4" /> },
+  { type: "icon", label: "Icon", icon: <ShapesIcon className="size-4" /> },
+  { type: "text", label: "Text", icon: <TextTIcon className="size-4" /> },
 ]
 
 const AI_SUGGESTIONS = [
@@ -174,8 +174,55 @@ function penFor(bg: string, prefersDark: boolean): string {
 // and the chat overlay; the sendMessage plumbing is left intact.
 const AI_ENABLED = false
 
+// ─── Small-screen gate ───────────────────────────────────────────────────────
+// The editor assumes a pointer, a keyboard, and room for the canvas + timeline
+// side by side, so below this width we show a notice instead of mounting it.
+const MIN_WIDTH = 1024
+
+/** `null` until mounted — the server can't know the viewport width. */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${MIN_WIDTH}px)`)
+    const sync = () => setIsDesktop(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
+  }, [])
+
+  return isDesktop
+}
+
+function DesktopOnly() {
+  return (
+    <div className="flex size-full min-h-[60svh] items-center justify-center rounded-2xl border border-border bg-muted/20 p-8">
+      <div className="max-w-sm text-center">
+        <CornersOutIcon className="mx-auto size-6 text-muted-foreground" />
+        <h2 className="mt-4 text-lg font-medium">Open this on a desktop</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Animate is a motion editor built for a big canvas, a mouse, and
+          keyboard shortcuts — it needs a screen at least {MIN_WIDTH}px wide.
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground/80">
+          A mobile-friendly layout is a work in progress.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export function Animate(props: { className?: string; aiEndpoint?: string }) {
+  const isDesktop = useIsDesktop()
+
+  // Render nothing on the first paint rather than flashing the wrong one.
+  if (isDesktop === null) return null
+  if (!isDesktop) return <DesktopOnly />
+  return <AnimateEditor {...props} />
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
-export function Animate({
+function AnimateEditor({
   className,
   aiEndpoint = "/api/animate",
 }: {
@@ -1288,7 +1335,7 @@ export function Animate({
             title="Insert a shape or template"
             className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background hover:opacity-90"
           >
-            <Plus className="size-3.5" /> Add
+            <PlusIcon className="size-3.5" /> Add
           </button>
           <HeaderBtn
             onClick={() => setTool((t) => (t === "draw" ? "select" : "draw"))}
@@ -1298,18 +1345,18 @@ export function Animate({
             solidActive
             dataTour="pencil"
           >
-            <Pencil className="size-4" />
+            <PencilIcon className="size-4" />
           </HeaderBtn>
           <div className="mx-1.5 h-5 w-px bg-border" />
           <HeaderBtn onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-            <Undo2 className="size-4" />
+            <ArrowUUpLeftIcon className="size-4" />
           </HeaderBtn>
           <HeaderBtn onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
-            <Redo2 className="size-4" />
+            <ArrowUUpRightIcon className="size-4" />
           </HeaderBtn>
           <div className="mx-1.5 h-5 w-px bg-border" />
           <HeaderBtn onClick={() => zoomBy(1 / 1.25)} title="Zoom out">
-            <ZoomOut className="size-4" />
+            <MagnifyingGlassMinusIcon className="size-4" />
           </HeaderBtn>
           <button
             onClick={resetView}
@@ -1319,14 +1366,14 @@ export function Animate({
             {Math.round(zoom * 100)}%
           </button>
           <HeaderBtn onClick={() => zoomBy(1.25)} title="Zoom in">
-            <ZoomIn className="size-4" />
+            <MagnifyingGlassPlusIcon className="size-4" />
           </HeaderBtn>
           <HeaderBtn onClick={resetView} title="Fit to view">
-            <Maximize2 className="size-4" />
+            <CornersOutIcon className="size-4" />
           </HeaderBtn>
           <div className="mx-1.5 h-5 w-px bg-border" />
           <HeaderBtn onClick={() => setResetOpen(true)} title="Reset project">
-            <RotateCcw className="size-4" />
+            <ArrowCounterClockwiseIcon className="size-4" />
           </HeaderBtn>
         </div>
         <span className="justify-self-center font-mono text-xs text-muted-foreground">
@@ -1342,7 +1389,7 @@ export function Animate({
                 className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground hover:bg-muted"
               >
                 {fpsSegments.length ? "Custom fps" : `${fps} fps`}
-                <ChevronDown className="size-3 opacity-60" />
+                <CaretDownIcon className="size-3 opacity-60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -1369,14 +1416,14 @@ export function Animate({
             active={onion}
             bordered
           >
-            <Layers className="size-4" />
+            <StackSimpleIcon className="size-4" />
           </HeaderBtn>
           <HeaderBtn
             onClick={() => setGotoOpen(true)}
             title="Go to a second or frame"
             bordered
           >
-            <Clock className="size-4" />
+            <ClockIcon className="size-4" />
           </HeaderBtn>
           <HeaderBtn
             onClick={() => setLoop((l) => !l)}
@@ -1384,7 +1431,7 @@ export function Animate({
             active={loop}
             bordered
           >
-            <Repeat className="size-4" />
+            <RepeatIcon className="size-4" />
           </HeaderBtn>
           <HeaderBtn
             onClick={() => setIsPlaying((p) => !p)}
@@ -1392,7 +1439,7 @@ export function Animate({
             bordered
             dataTour="play"
           >
-            {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+            {isPlaying ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
           </HeaderBtn>
           {AI_ENABLED && (
             <HeaderBtn
@@ -1401,7 +1448,7 @@ export function Animate({
               active={chatOpen}
               bordered
             >
-              <MessageSquare className="size-4" />
+              <ChatCircleIcon className="size-4" />
             </HeaderBtn>
           )}
           <button
@@ -1410,7 +1457,7 @@ export function Animate({
             disabled={isExporting}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background disabled:opacity-50"
           >
-            <Download className="size-3.5" />
+            <DownloadIcon className="size-3.5" />
             {isExporting ? "Exporting…" : "Download"}
           </button>
         </div>
@@ -1579,7 +1626,7 @@ export function Animate({
                 onClick={() => setChatOpen(false)}
                 className="cursor-pointer text-muted-foreground hover:text-foreground"
               >
-                <X className="size-4" />
+                <XIcon className="size-4" />
               </button>
             </div>
             <div ref={chatScrollRef} className="flex-1 space-y-3 overflow-y-auto p-3">
@@ -1626,7 +1673,7 @@ export function Animate({
               ))}
               {aiLoading && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Sparkles className="size-3.5 animate-pulse" /> Generating…
+                  <SparkleIcon className="size-3.5 animate-pulse" /> Generating…
                 </div>
               )}
             </div>
@@ -1646,7 +1693,7 @@ export function Animate({
                 disabled={aiLoading}
                 className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-foreground text-background disabled:opacity-50"
               >
-                <Send className="size-3.5" />
+                <PaperPlaneTiltIcon className="size-3.5" />
               </button>
             </div>
           </aside>
@@ -1734,7 +1781,7 @@ export function Animate({
                 onClick={() => setShapesOpen(false)}
                 className="cursor-pointer text-muted-foreground hover:text-foreground"
               >
-                <X className="size-4" />
+                <XIcon className="size-4" />
               </button>
             </div>
 
@@ -1763,12 +1810,12 @@ export function Animate({
                 }}
                 className="flex aspect-square cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground"
               >
-                <ImagePlus className="size-4" />
+                <ImageSquareIcon className="size-4" />
               </button>
             </div>
 
             <span className="mb-1.5 mt-4 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-              <LayoutTemplate className="size-3.5" /> Templates
+              <LayoutIcon className="size-3.5" /> Templates
             </span>
             <div className="space-y-0.5">
               {PRESETS.map((p) => (
@@ -1822,7 +1869,7 @@ export function Animate({
                 onClick={() => setGotoOpen(false)}
                 className="cursor-pointer text-muted-foreground hover:text-foreground"
               >
-                <X className="size-4" />
+                <XIcon className="size-4" />
               </button>
             </div>
             <div className="mb-2 flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-0.5">
@@ -2016,7 +2063,7 @@ function CustomFpsDialog({
                 className="inline-flex size-6 cursor-pointer items-center justify-center rounded border border-border text-muted-foreground hover:text-destructive disabled:opacity-30"
                 title="Remove segment"
               >
-                <Trash2 className="size-3.5" />
+                <TrashIcon className="size-3.5" />
               </button>
             </div>
           ))}
@@ -2032,7 +2079,7 @@ function CustomFpsDialog({
             }}
             className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-dashed border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
           >
-            <Plus className="size-3" /> Add segment
+            <PlusIcon className="size-3" /> Add segment
           </button>
         </div>
 

@@ -1,0 +1,27 @@
+{
+  "name": "bettercomp",
+  "version": "0.0.1",
+  "description": "Better Components — a shadcn registry of animated, copy-paste React components. Components are installed from the registry, not from this package.",
+  "keywords": [
+    "shadcn",
+    "shadcn-registry",
+    "react",
+    "components",
+    "animation",
+    "motion"
+  ],
+  "homepage": "https://components.bksh.site",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bikash1376/better-components.git",
+    "directory": "packages/bettercomp"
+  },
+  "bugs": {
+    "url": "https://github.com/bikash1376/better-components/issues"
+  },
+  "license": "MIT",
+  "author": "bikash1376",
+  "files": [
+    "README.md"
+  ]
+}

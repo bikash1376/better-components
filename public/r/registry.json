@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "bettercomp",
-  "homepage": "https://better-components-alpha.vercel.app",
+  "homepage": "https://components.bksh.site",
   "items": [
     {
       "name": "static-button",
@@ -60,6 +60,25 @@
           "path": "src/components/better/paper.tsx",
           "type": "registry:component",
           "target": "components/better/paper.tsx"
+        }
+      ]
+    },
+    {
+      "name": "avatar",
+      "type": "registry:component",
+      "title": "Avatar",
+      "description": "Deterministic avatars from any seed — DiceBear CC0 art styles or an abstract shader gradient.",
+      "dependencies": [
+        "@dicebear/core",
+        "@dicebear/collection",
+        "@paper-design/shaders-react"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/better/avatar.tsx",
+          "type": "registry:component",
+          "target": "components/better/avatar.tsx"
         }
       ]
     },
@@ -157,7 +176,7 @@
       "name": "flipbook",
       "type": "registry:component",
       "title": "Flipbook",
-      "description": "Snaps between children like flipbook pages — no easing, no fades.",
+      "description": "Snaps between frames — emoji, text, or square images — with no easing and no fades.",
       "dependencies": [],
       "registryDependencies": [],
       "files": [

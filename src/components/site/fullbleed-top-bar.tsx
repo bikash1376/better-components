@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Compass } from "lucide-react"
+import { ArrowLeftIcon, CompassIcon } from "@phosphor-icons/react"
 
 import {
   Dialog,
@@ -31,7 +31,7 @@ export function FullBleedTopBar({ backHref }: { backHref: string }) {
         onClick={() => setConfirmOpen(true)}
         className={linkClass}
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeftIcon className="size-4" />
         Back
       </button>
 
@@ -43,7 +43,7 @@ export function FullBleedTopBar({ backHref }: { backHref: string }) {
         }
         className={linkClass}
       >
-        <Compass className="size-4" />
+        <CompassIcon className="size-4" />
         Take a tour
       </button>
 

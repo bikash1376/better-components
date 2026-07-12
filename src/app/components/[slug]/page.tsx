@@ -3,17 +3,18 @@ import path from "node:path"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { BookOpen } from "lucide-react"
+import { BookOpenIcon } from "@phosphor-icons/react/ssr"
 
 import { cn } from "@/lib/utils"
 import { installCommand } from "@/lib/registry"
-import { ActionDock } from "@/components/site/action-dock"
 import { CommandWithTooltip } from "@/components/site/command-with-tooltip"
 import { FullBleedTopBar } from "@/components/site/fullbleed-top-bar"
-import { ComponentSidebar } from "@/components/site/component-sidebar"
+import { SiteChrome } from "@/components/site/site-chrome"
+import { ViewCode } from "@/components/site/view-code"
 import { ComponentPlayground } from "@/components/site/playground"
 import {
   GITHUB_BASE,
+  REPO_URL,
   components,
   getComponent,
   visibleComponents,
@@ -78,10 +79,10 @@ export default async function ComponentPage({
 
   return (
     <main className="relative flex min-h-svh flex-1 flex-col px-6 py-16">
-      <ComponentSidebar items={searchItems} current={slug} />
+      <SiteChrome items={searchItems} current={slug} repoUrl={REPO_URL} />
 
       <Link href="/docs" className={cn(docsLinkClass, "fixed left-6 top-6 z-40")}>
-        <BookOpen className="size-4" />
+        <BookOpenIcon className="size-4" />
         Docs
       </Link>
 
@@ -91,11 +92,19 @@ export default async function ComponentPage({
           component.playground ? "max-w-5xl" : "max-w-4xl"
         )}
       >
-        <CommandWithTooltip
-          command={installCommand(slug)}
-          name={component.name}
-          description={component.description}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <CommandWithTooltip
+            command={installCommand(slug)}
+            name={component.name}
+            description={component.description}
+          />
+          <ViewCode
+            code={code}
+            usage={component.usage}
+            githubUrl={githubUrl}
+          />
+        </div>
+
         {component.playground ? (
           <div className="mt-4">
             <ComponentPlayground slug={slug} />
@@ -106,14 +115,6 @@ export default async function ComponentPage({
           </div>
         )}
       </div>
-
-      <ActionDock
-        variant="component"
-        code={code}
-        usage={component.usage}
-        githubUrl={githubUrl}
-        items={searchItems}
-      />
     </main>
   )
 }
