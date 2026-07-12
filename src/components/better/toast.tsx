@@ -141,7 +141,7 @@ interface ToasterProps {
 /**
  * Toaster — mount once. Renders the toast stack with spring physics, stacking,
  * swipe-to-dismiss, and hover-to-hold. Inspired by sonner (MIT); reimplemented.
- * Category: Mouse. Part of the Better Component library.
+ * Category: UI. Part of the Better Component library.
  */
 export function Toaster({
   position = "bottom-right",

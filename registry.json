@@ -7,7 +7,7 @@
       "name": "static-button",
       "type": "registry:component",
       "title": "Static Button",
-      "description": "A clean, Apple-style pill button with variants and sizes — pure CSS, no motion.",
+      "description": "A clean, Apple-style pill button — variants and sizes, pure CSS, no motion.",
       "dependencies": ["class-variance-authority"],
       "registryDependencies": [],
       "files": [
@@ -37,7 +37,7 @@
       "name": "infinite-canvas",
       "type": "registry:component",
       "title": "Infinite Canvas",
-      "description": "A pannable, endless grid — only on-screen tiles mount, popping in as you drag.",
+      "description": "A pannable, endless grid of any tiles you like — only on-screen cells mount.",
       "dependencies": ["motion"],
       "registryDependencies": [],
       "files": [
@@ -52,8 +52,8 @@
       "name": "paper",
       "type": "registry:component",
       "title": "Paper",
-      "description": "A textured paper surface — fractal-noise grain, soft light, and emboss.",
-      "dependencies": [],
+      "description": "A GPU paper surface — fibres, crumples, folds, and grain. Run it over a photo, or on its own.",
+      "dependencies": ["@paper-design/shaders-react"],
       "registryDependencies": [],
       "files": [
         {
@@ -101,7 +101,7 @@
       "name": "icon-tooltip",
       "type": "registry:component",
       "title": "Icon Tooltip",
-      "description": "An icon button that reveals a tooltip on hover.",
+      "description": "An icon button that reveals a tooltip — choose the side and delay.",
       "dependencies": ["motion"],
       "registryDependencies": [],
       "files": [
@@ -131,7 +131,7 @@
       "name": "text-shimmer",
       "type": "registry:component",
       "title": "Text Shimmer",
-      "description": "An animated gradient sweep across text, powered by motion.",
+      "description": "An animated gradient sweep across text.",
       "dependencies": ["motion"],
       "registryDependencies": [],
       "files": [

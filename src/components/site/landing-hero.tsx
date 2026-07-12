@@ -5,6 +5,7 @@ import { GrainGradient } from "@paper-design/shaders-react"
 
 import { Button } from "@/components/ui/button"
 import { InstallCommand } from "@/components/site/install-command"
+import { installCommand } from "@/lib/registry"
 
 /**
  * Landing hero — an animated grain-gradient shader (paper.design) behind the
@@ -17,7 +18,7 @@ export function LandingHero() {
       {/* Animated backdrop. `speed` drives it — set 0 to freeze. It paints to a
           canvas, so it sits under the content and ignores pointer events. */}
       <GrainGradient
-        colors={["#ff1493", "#00ffff", "#8a2be2", "#ffd700"]}
+        colors={["#7300ff", "#eba8ff", "#00bfff", "#2a00ff"]}
         colorBack="#000000"
         softness={0.8}
         intensity={0.35}
@@ -50,12 +51,14 @@ export function LandingHero() {
         </h1>
 
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          <InstallCommand command="npx shadcn@latest add @bettercomp/static-button" />
+          {/* The zero-config URL form — the @bettercomp namespace only works
+              after registering it in components.json (explained in the docs). */}
+          <InstallCommand command={installCommand("static-button")} />
           <Button
             asChild
             className="h-10 rounded-xl bg-blue-600 px-6 text-sm text-white hover:bg-blue-500"
           >
-            <Link href="/components">Get Started</Link>
+            <Link href="/docs">Get Started</Link>
           </Button>
         </div>
 

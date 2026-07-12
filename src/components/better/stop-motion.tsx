@@ -37,7 +37,7 @@ const UNIT_FRAMES = [
  * StopMotion — wraps content and jumps between discrete frames, giving the
  * choppy, hand-animated "boil" of stop-motion. Snaps between frames (no
  * easing). `rotate` and `shift` set how far it swings at either end.
- * Category: Typography. Part of the Better Component library.
+ * Category: Hand Drawn. Part of the Better Component library.
  */
 export function StopMotion({
   children,

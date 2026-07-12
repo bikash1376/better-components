@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react/ssr"
+import { ArrowRightIcon } from "@phosphor-icons/react/ssr"
 
 import { CodeBlock } from "@/components/site/code-block"
+import { SiteChrome } from "@/components/site/site-chrome"
 import { REGISTRY_URL, installCommand } from "@/lib/registry"
-import { visibleComponents } from "@/registry"
+import { REPO_URL, componentsByCategory, visibleComponents } from "@/registry"
 
 export const metadata: Metadata = {
   title: "Docs · Better Components",
@@ -59,26 +60,17 @@ function Card({ code, lang }: { code: string; lang: string }) {
 }
 
 export default function DocsPage() {
-  return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeftIcon className="size-4" />
-          Home
-        </Link>
-        <Link
-          href="/components"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Browse components
-          <ArrowRightIcon className="size-4" />
-        </Link>
-      </div>
+  const searchItems = visibleComponents.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    category: c.category,
+  }))
 
-      <h1 className="mt-8 text-3xl font-semibold tracking-tight sm:text-4xl">
+  return (
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-24 sm:px-6">
+      <SiteChrome items={searchItems} repoUrl={REPO_URL} />
+
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
         Documentation
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -173,8 +165,11 @@ export function Example() {
 
         <Section title="Browse the library">
           <p>
-            {visibleComponents.length} components across UI, Typography, Stop
-            Motion, Loaders, Carousel, Mouse, and the Animate editor.
+            {visibleComponents.length} components across{" "}
+            {componentsByCategory()
+              .map((g) => g.category)
+              .join(", ")}
+            .
           </p>
           <Link
             href="/components"
