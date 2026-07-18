@@ -1,0 +1,26 @@
+# Force LF in the repo *and* in every working tree, on every OS.
+#
+# Without this, a Windows checkout (core.autocrlf=true) writes CRLF to disk,
+# and `pnpm registry:build` reads those files and bakes \r\n into the `content`
+# strings inside public/r/*.json. That makes the registry output depend on which
+# machine built it — rebuild on macOS and all 20 files churn to LF, rebuild on
+# Windows and they churn back — and ships CRLF source to anyone running
+# `shadcn add`. eol=lf (not just text=auto) is what pins the working tree.
+* text=auto eol=lf
+
+# Generated: keep these out of diffs and merge conflicts.
+pnpm-lock.yaml -diff linguist-generated
+
+# Binary assets — never touch their bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
+*.webm binary

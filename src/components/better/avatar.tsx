@@ -73,16 +73,53 @@ function hslToHex(h: number, s: number, l: number) {
   return `#${channel(0)}${channel(8)}${channel(4)}`
 }
 
-/** Four analogous colors fanned out from a hue the seed picks. */
-function gradientColors(seed: string) {
-  const h = hash(seed)
-  const base = h % 360
-  const spread = 30 + ((h >>> 9) % 50)
-  const sat = 0.6 + ((h >>> 17) % 30) / 100
-  const light = 0.44 + ((h >>> 25) % 16) / 100
-  return [0, 1, 2, 3].map((i) =>
+/**
+ * Mulberry32 — a tiny PRNG. `hash` alone gives one 32-bit number, and slicing
+ * it into fields (h >>> 9, h >>> 17, …) makes those fields share bits, so two
+ * seeds that hash closely end up looking alike. Drawing successive values from
+ * a PRNG keeps every knob independent.
+ */
+function rng(seed: number) {
+  let a = seed
+  return () => {
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/**
+ * Everything the mesh shader needs, all of it seeded. Colors alone are not
+ * enough: the shape of the gradient comes from the distortion/swirl/rotation
+ * knobs and from where in the animation it is frozen (`frame`). Two avatars
+ * sharing a frame and differing only in hue read as the same avatar recolored.
+ */
+function gradientParams(seed: string) {
+  const rand = rng(hash(seed))
+
+  const base = rand() * 360
+  const spread = 30 + rand() * 50
+  const sat = 0.6 + rand() * 0.3
+  const light = 0.44 + rand() * 0.16
+  const colors = [0, 1, 2, 3].map((i) =>
     hslToHex((base + i * spread) % 360, sat, light - i * 0.03)
   )
+
+  return {
+    colors,
+    distortion: 0.55 + rand() * 0.45,
+    swirl: 0.25 + rand() * 0.65,
+    rotation: rand() * 360,
+    // Kept well inside ±1 so a spot never drifts off the tile and leaves a
+    // flat corner.
+    offsetX: (rand() - 0.5) * 0.7,
+    offsetY: (rand() - 0.5) * 0.7,
+    scale: 0.85 + rand() * 0.75,
+    // The big one. At speed 0 the shader parks on this frame forever, so
+    // without it every frozen avatar is the same composition.
+    frame: rand() * 20000,
+  }
 }
 
 /**
@@ -107,7 +144,7 @@ export function Avatar({
     }).toDataUri()
   }, [seed, style, size])
 
-  const colors = useMemo(() => gradientColors(seed), [seed])
+  const gradient = useMemo(() => gradientParams(seed), [seed])
 
   return (
     <div
@@ -130,10 +167,15 @@ export function Avatar({
         />
       ) : (
         <MeshGradient
-          colors={colors}
+          colors={gradient.colors}
           speed={speed}
-          distortion={0.9}
-          swirl={0.7}
+          frame={gradient.frame}
+          distortion={gradient.distortion}
+          swirl={gradient.swirl}
+          rotation={gradient.rotation}
+          offsetX={gradient.offsetX}
+          offsetY={gradient.offsetY}
+          scale={gradient.scale}
           className="size-full"
         />
       )}

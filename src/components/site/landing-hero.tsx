@@ -50,25 +50,38 @@ export function LandingHero() {
           Better Components
         </h1>
 
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+        <div className="mt-8 flex w-full max-w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
           {/* The zero-config URL form — the @bettercomp namespace only works
-              after registering it in components.json (explained in the docs). */}
-          <InstallCommand command={installCommand("static-button")} />
+              after registering it in components.json (explained in the docs).
+              w-full here (capped by the parent's w-full max-w-full) is what lets
+              InstallCommand's own overflow-x-auto actually kick in on narrow
+              screens instead of the whole page overflowing horizontally. */}
+          <InstallCommand
+            command={installCommand("static-button")}
+            className="w-full sm:w-auto"
+          />
           <Button
             asChild
-            className="h-10 rounded-xl bg-blue-600 px-6 text-sm text-white hover:bg-blue-500"
+            className="h-10 w-full rounded-xl bg-blue-600 px-6 text-sm text-white hover:bg-blue-500 sm:w-auto"
           >
             <Link href="/docs">Get Started</Link>
           </Button>
         </div>
 
-        <div className="mt-5 flex items-center gap-5 text-sm text-white/60">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/60">
           <Link href="/docs" className="transition-colors hover:text-white">
             Documentation
           </Link>
           <span className="size-1 rounded-full bg-white/30" />
           <Link href="/components" className="transition-colors hover:text-white">
             Components
+          </Link>
+          <span className="size-1 rounded-full bg-white/30" />
+          <Link
+            href="/design-exploration"
+            className="transition-colors hover:text-white"
+          >
+            Exploration
           </Link>
         </div>
       </section>
