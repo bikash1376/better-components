@@ -5,7 +5,7 @@
  * install command and doc example is derived from it, so nothing else changes.
  */
 export const REGISTRY_URL = (
-  process.env.NEXT_PUBLIC_REGISTRY_URL ?? "https://components.bksh.site"
+  process.env.NEXT_PUBLIC_REGISTRY_URL ?? "https://components.useiota.space"
 ).replace(/\/$/, "")
 
 /** The registry namespace (for the shadcn `components.json` `registries` map). */

@@ -9,7 +9,7 @@ them with the shadcn CLI rather than from npm.
 ## Install a component
 
 ```bash
-npx shadcn@latest add https://components.bksh.site/r/avatar.json
+npx shadcn@latest add https://components.useiota.space/r/avatar.json
 ```
 
 Or map the namespace once in your `components.json`:
@@ -17,7 +17,7 @@ Or map the namespace once in your `components.json`:
 ```json
 {
   "registries": {
-    "@bettercomp": "https://components.bksh.site/r/{name}.json"
+    "@bettercomp": "https://components.useiota.space/r/{name}.json"
   }
 }
 ```
@@ -30,7 +30,7 @@ npx shadcn@latest add @bettercomp/avatar
 
 ## Links
 
-- Browse the components: <https://components.bksh.site>
+- Browse the components: <https://components.useiota.space>
 - Source: <https://github.com/bikash1376/better-components>
 
 MIT © bikash1376

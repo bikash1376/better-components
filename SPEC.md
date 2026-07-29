@@ -69,7 +69,7 @@ limiting** — deployed as-is, anyone could loop it and burn the API key.
   (hex) before building the Phosphor CDN URL / SVG in
   `src/components/better/animate/icons.tsx`.
 - **npm name:** `bettercomp` / `@bettercomp` is not yet reserved on npm. The
-  registry is served from `components.bksh.site`.
+  registry is served from `components.useiota.space`.
 
 ---
 

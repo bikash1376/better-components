@@ -164,7 +164,7 @@ flag). Tracked as **Open item A** in `SPEC.md`.
   `public/r/<name>.json`; deployed, these serve at `https://<domain>/r/<name>.json`.
 - `components.json` maps the `@bettercomp` namespace to that URL; the registry URL
   is centralized in `src/lib/registry.ts` (`NEXT_PUBLIC_REGISTRY_URL`), currently
-  the Vercel deployment (`better-components-alpha.vercel.app`).
+  `components.useiota.space`.
 - Install once deployed: `npx shadcn@latest add @bettercomp/static-button`.
 - **Naming** — `better-components` is taken on npm, so the registry + namespace
   use `bettercomp` / `@bettercomp` (not yet reserved on npm).

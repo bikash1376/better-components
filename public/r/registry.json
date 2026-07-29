@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "bettercomp",
-  "homepage": "https://components.bksh.site",
+  "homepage": "https://components.useiota.space",
   "items": [
     {
       "name": "static-button",

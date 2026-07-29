@@ -93,7 +93,7 @@ Components ship as a **shadcn registry**, so anyone can pull them straight into 
   npx shadcn@latest add @bettercomp/static-button
   ```
 
-  (or the full URL, e.g. `npx shadcn@latest add https://components.bksh.site/r/static-button.json`).
+  (or the full URL, e.g. `npx shadcn@latest add https://components.useiota.space/r/static-button.json`).
 
 Temporarily hidden components (above) are intentionally left out of `registry.json`, so they aren't published until you add them back.
 
